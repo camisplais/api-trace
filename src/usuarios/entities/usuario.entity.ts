@@ -35,6 +35,9 @@ export class Usuario
   @Column({ type: 'varchar', length:10})
   celular!: string;
 
+  @Column({ type: 'varchar', length:30})
+  email!: string;
+
   @Column({ type: 'enum', enum:Estado, default:Estado.ACTIVO})
   estado!: Estado;
 
