@@ -1,0 +1,27 @@
+// src/database/seeds/main.ts
+import { NestFactory } from '@nestjs/core';
+import { DataSource } from 'typeorm';
+import { AppModule } from '../../app.module';
+import { seedDocumentos } from './seed-documentos';
+import { seedClientes } from './seed-clientes';
+import { seedDocCliente } from './seed-doc-cliente';
+
+async function bootstrap() {
+  const app = await NestFactory.createApplicationContext(AppModule);
+  const dataSource = app.get(DataSource);
+
+  try {
+    console.log('Ejecutando seeders...');
+    await seedDocumentos(dataSource);
+    await seedClientes(dataSource);
+    await seedDocCliente(dataSource)
+    console.log('Seed completado');
+  } catch (err) {
+    console.error('Error en el seed', err);
+    process.exit(1);
+  } finally {
+    await app.close();
+  }
+}
+
+bootstrap();
