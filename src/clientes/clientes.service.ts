@@ -1,11 +1,21 @@
 import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { Cliente } from './entities/cliente.entity';
 import { CreateClienteDto } from './dto/create-cliente.dto';
 import { UpdateClienteDto } from './dto/update-cliente.dto';
 
 @Injectable()
-export class ClientesService {
+export class ClientesService
+{
+  constructor(
+    @InjectRepository(Cliente)
+    private readonly clienteRepo: Repository<Cliente>,
+  ) {}
+
   create(createClienteDto: CreateClienteDto) {
-    return 'This action adds a new cliente';
+    const cliente = this.clienteRepo.create(createClienteDto);
+    return this.clienteRepo.save(cliente);
   }
 
   findAll() {
