@@ -17,7 +17,7 @@ export class Cliente
   @PrimaryGeneratedColumn({type:'smallint', unsigned:true})
   id!: number;
 
-  @Column({ type: 'varchar', length:26})
+  @Column({ type: 'varchar', length:45})
   nombre!: string;
 
   @Column({ type: 'enum', enum:Tipo})
