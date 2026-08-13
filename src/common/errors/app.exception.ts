@@ -3,14 +3,14 @@ import { ErrorCatalog, ErrorKey } from './error-catalog';
 import { ErrorResponse } from './error.types';
 
 export class AppException extends HttpException {
-  constructor(errorKey: ErrorKey) {
+  constructor(errorKey: ErrorKey, customMsg?: string) {
     const error = ErrorCatalog[errorKey];
 
     const response: ErrorResponse = {
       data: null,
       msg: {
         code: error.code,
-        msg: error.userMessage,
+        msg:customMsg ?? error.userMessage,
       },
     };
 
