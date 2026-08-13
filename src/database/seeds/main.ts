@@ -5,6 +5,8 @@ import { AppModule } from '../../app.module';
 import { seedDocumentos } from './seed-documentos';
 import { seedClientes } from './seed-clientes';
 import { seedDocCliente } from './seed-doc-cliente';
+import { seedEmpleados } from './seed-empleados';
+import { seedTransportes } from './seed-transportes';
 
 async function bootstrap() {
   const app = await NestFactory.createApplicationContext(AppModule);
@@ -14,6 +16,8 @@ async function bootstrap() {
     console.log('Ejecutando seeders...');
     await seedDocumentos(dataSource);
     await seedClientes(dataSource);
+    await seedEmpleados(dataSource);
+    await seedTransportes(dataSource);
     await seedDocCliente(dataSource)
     console.log('Seed completado');
   } catch (err) {
