@@ -13,7 +13,7 @@ export async function seedEmpleados(dataSource: DataSource) {
       fecha_nacimiento: new Date('1990-05-12'),
       fecha_ingreso: new Date('2020-01-15'),
       departamento: Departamento.SUPPLYCHAIN,
-      puesto: 'Analista de Inventarios',
+      puesto: 'Aduanas',
       estado: Estado.DISPONIBLE,
     },
     {
@@ -24,7 +24,7 @@ export async function seedEmpleados(dataSource: DataSource) {
       fecha_nacimiento: new Date('1985-09-20'),
       fecha_ingreso: new Date('2018-03-01'),
       departamento: Departamento.TRANSPORTES,
-      puesto: 'Chofer de Camión',
+      puesto: 'Chofer',
       estado: Estado.OCUPADO,
     },
     {
@@ -34,8 +34,8 @@ export async function seedEmpleados(dataSource: DataSource) {
       apellido_materno: 'Santos',
       fecha_nacimiento: new Date('1992-11-02'),
       fecha_ingreso: new Date('2021-07-10'),
-      departamento: Departamento.SEGURIDAD,
-      puesto: 'Guardia de Caseta',
+      departamento: Departamento.SUPPLYCHAIN,
+      puesto: 'Embarques',
       estado: Estado.DISPONIBLE,
     },
     {
@@ -46,7 +46,7 @@ export async function seedEmpleados(dataSource: DataSource) {
       fecha_nacimiento: new Date('1993-03-18'),
       fecha_ingreso: new Date('2019-06-20'),
       departamento: Departamento.SUPPLYCHAIN,
-      puesto: 'Coordinadora de Compras',
+      puesto: 'Aduanas',
       estado: Estado.OCUPADO,
     },
     {
@@ -57,7 +57,7 @@ export async function seedEmpleados(dataSource: DataSource) {
       fecha_nacimiento: new Date('1988-07-25'),
       fecha_ingreso: new Date('2017-02-14'),
       departamento: Departamento.TRANSPORTES,
-      puesto: 'Supervisor de Rutas',
+      puesto: 'Chofer',
       estado: Estado.DISPONIBLE,
     },
     {
@@ -67,8 +67,8 @@ export async function seedEmpleados(dataSource: DataSource) {
       apellido_materno: 'Delgado',
       fecha_nacimiento: new Date('1995-01-30'),
       fecha_ingreso: new Date('2022-04-01'),
-      departamento: Departamento.SEGURIDAD,
-      puesto: 'Oficial de Seguridad',
+      departamento: Departamento.SUPPLYCHAIN,
+      puesto: 'Embarques',
       estado: Estado.DISPONIBLE,
     },
     {
@@ -78,8 +78,8 @@ export async function seedEmpleados(dataSource: DataSource) {
       apellido_materno: 'Vega',
       fecha_nacimiento: new Date('1987-11-11'),
       fecha_ingreso: new Date('2015-09-05'),
-      departamento: Departamento.TRANSPORTES,
-      puesto: 'Mecánico de Flota',
+      departamento: Departamento.SUPPLYCHAIN,
+      puesto: 'Embarques',
       estado: Estado.OCUPADO,
     },
     {
@@ -90,7 +90,7 @@ export async function seedEmpleados(dataSource: DataSource) {
       fecha_nacimiento: new Date('1991-06-02'),
       fecha_ingreso: new Date('2018-12-10'),
       departamento: Departamento.SUPPLYCHAIN,
-      puesto: 'Planeadora de Producción',
+      puesto: 'Coordinador Stock',
       estado: Estado.DISPONIBLE,
     },
     {
@@ -101,7 +101,7 @@ export async function seedEmpleados(dataSource: DataSource) {
       fecha_nacimiento: new Date('1989-04-09'),
       fecha_ingreso: new Date('2016-08-22'),
       departamento: Departamento.SEGURIDAD,
-      puesto: 'Supervisor de Caseta',
+      puesto: 'Guardia de Caseta',
       estado: Estado.OCUPADO,
     },
     {
@@ -112,7 +112,7 @@ export async function seedEmpleados(dataSource: DataSource) {
       fecha_nacimiento: new Date('1994-12-15'),
       fecha_ingreso: new Date('2020-05-03'),
       departamento: Departamento.SUPPLYCHAIN,
-      puesto: 'Especialista en Logística',
+      puesto: 'Customer Service',
       estado: Estado.DISPONIBLE,
     },
     {
@@ -123,7 +123,7 @@ export async function seedEmpleados(dataSource: DataSource) {
       fecha_nacimiento: new Date('1986-08-19'),
       fecha_ingreso: new Date('2014-11-07'),
       departamento: Departamento.TRANSPORTES,
-      puesto: 'Coordinador de Transporte',
+      puesto: 'Chofer',
       estado: Estado.OCUPADO,
     },
     {
@@ -134,7 +134,7 @@ export async function seedEmpleados(dataSource: DataSource) {
       fecha_nacimiento: new Date('1997-02-28'),
       fecha_ingreso: new Date('2023-01-12'),
       departamento: Departamento.SEGURIDAD,
-      puesto: 'Guardia de Seguridad',
+      puesto: 'Guardia de Caseta',
       estado: Estado.DISPONIBLE,
     },
     {
@@ -145,7 +145,7 @@ export async function seedEmpleados(dataSource: DataSource) {
       fecha_nacimiento: new Date('1990-10-05'),
       fecha_ingreso: new Date('2019-09-01'),
       departamento: Departamento.SUPPLYCHAIN,
-      puesto: 'Analista de Proveedores',
+      puesto: 'Customer Service',
       estado: Estado.OCUPADO,
     },
     {
@@ -156,7 +156,7 @@ export async function seedEmpleados(dataSource: DataSource) {
       fecha_nacimiento: new Date('1992-01-17'),
       fecha_ingreso: new Date('2021-03-25'),
       departamento: Departamento.TRANSPORTES,
-      puesto: 'Asistente de Logística',
+      puesto: 'Chofer',
       estado: Estado.DISPONIBLE,
     },
     {
@@ -167,7 +167,7 @@ export async function seedEmpleados(dataSource: DataSource) {
       fecha_nacimiento: new Date('1984-09-29'),
       fecha_ingreso: new Date('2012-07-18'),
       departamento: Departamento.SEGURIDAD,
-      puesto: 'Jefe de Seguridad',
+      puesto: 'Guardia de Caseta',
       estado: Estado.OCUPADO,
     },
   ];
