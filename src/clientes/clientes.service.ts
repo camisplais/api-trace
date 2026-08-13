@@ -7,6 +7,7 @@ import { DocCliente } from 'src/doc_cliente/entities/doc_cliente.entity';
 import { CreateClienteDto } from './dto/create-cliente.dto';
 import { UpdateClienteDto } from './dto/update-cliente.dto';
 import { AppException } from 'src/common/errors/app.exception';
+import { FindClientesDto } from './dto/find-clientes.dto';
 
 @Injectable()
 export class ClientesService
@@ -24,10 +25,7 @@ export class ClientesService
        where: { nombre: createClienteDto.nombre },
       });
       if (existente) {
-        throw new AppException(
-          'VAL_DUPLICATE_FIELD',
-          'nombre ya existente, debe ser único',
-        );
+        throw new AppException('VAL_DUPLICATE_FIELD', { fieldName: 'nombre' });
       }
       const cliente = manager.create(Cliente, createClienteDto);
       await manager.save(cliente);
@@ -55,19 +53,74 @@ export class ClientesService
     });
   }
 
-  findAll() {
-    return `This action returns all clientes`;
+async findAll(query: FindClientesDto) {
+    const page = Number(query.page) || 1;
+    const perPage = Number(query.per_page) || 20;
+
+    const qb = this.clienteRepo
+      .createQueryBuilder('cliente')
+      .leftJoinAndSelect('cliente.docClientes', 'docCliente')
+      .leftJoinAndSelect('docCliente.documento', 'documento');
+
+    if (query.tipo) {
+      qb.andWhere('cliente.tipo = :tipo', { tipo: query.tipo });
+    }
+
+    if (query.search) {
+      qb.andWhere('cliente.nombre LIKE :search', { search: `%${query.search}%` });
+    }
+
+    qb.orderBy('cliente.id', 'DESC')
+      .skip((page - 1) * perPage)
+      .take(perPage);
+
+    const [clientes, total] = await qb.getManyAndCount();
+
+    return {
+      data: clientes.map((cliente) => ({
+        id: cliente.id,
+        nombre: cliente.nombre,
+        tipo: cliente.tipo,
+        ubicacion: cliente.ubicacion,
+        documentos: cliente.docClientes.map((dc) => ({
+          id: dc.documento.id,
+          nombre: dc.documento.nombre,
+        })),
+      })),
+      meta: {
+        total,
+        page,
+        per_page: perPage,
+        last_page: Math.ceil(total / perPage) || 1,
+      },
+    };
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} cliente`;
+  async findOne(id: number) {
+    const cliente = await this.clienteRepo.findOne({
+      where: { id },
+      relations: { docClientes: { documento: true } },
+    });
+    if (!cliente) {
+      throw new AppException('VAL_RECORD_NOT_FOUND', { record: 'Cliente' });
+    }
+    return {
+      id: cliente.id,
+      nombre: cliente.nombre,
+      tipo: cliente.tipo,
+      ubicacion: cliente.ubicacion,
+      documentos: cliente.docClientes.map((dc) => ({
+        id: dc.documento.id,
+        nombre: dc.documento.nombre,
+      })),
+    };
   }
 
   async update(id: number, updateClienteDto: UpdateClienteDto) {
     return this.dataSource.transaction(async (manager) => {
       const cliente = await manager.findOne(Cliente, { where: { id } });
       if (!cliente) {
-        throw new AppException('VAL_RECORD_NOT_FOUND', 'Cliente no encontrado');
+        throw new AppException('VAL_RECORD_NOT_FOUND', { record: 'Cliente' });
       }
 
       if (updateClienteDto.nombre !== cliente.nombre) {
@@ -75,10 +128,7 @@ export class ClientesService
           where: { nombre: updateClienteDto.nombre },
         });
         if (existente) {
-          throw new AppException(
-            'VAL_DUPLICATE_FIELD',
-            'nombre ya existente, debe ser único',
-          );
+          throw new AppException('VAL_DUPLICATE_FIELD', { fieldName: 'nombre' });
         }
       }
 
@@ -100,6 +150,14 @@ export class ClientesService
           })),
         };
     });
+  }
+
+  async remove(id: number) {
+    const cliente = await this.clienteRepo.findOne({ where: { id } });
+    if (!cliente) {
+      throw new AppException('VAL_RECORD_NOT_FOUND', { record: 'Cliente' });
+    }
+    await this.clienteRepo.softDelete(id);
   }
 
 }

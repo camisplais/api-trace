@@ -1,4 +1,5 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Put } from '@nestjs/common';
+import { Controller, Get, Post, Body, Put, Param, Delete, Query, HttpCode } from '@nestjs/common';
+import { FindClientesDto } from './dto/find-clientes.dto';
 import { ClientesService } from './clientes.service';
 import { CreateClienteDto } from './dto/create-cliente.dto';
 import { UpdateClienteDto } from './dto/update-cliente.dto';
@@ -13,8 +14,8 @@ export class ClientesController {
   }
 
   @Get()
-  findAll() {
-    return this.clientesService.findAll();
+  findAll(@Query() query: FindClientesDto) {
+    return this.clientesService.findAll(query);
   }
 
   @Get(':id')
@@ -27,8 +28,9 @@ export class ClientesController {
     return this.clientesService.update(+id, updateClienteDto);
   }
 
-  //@Delete(':id')
-  //remove(@Param('id') id: string) {
-    //return this.clientesService.remove(+id);
-  //}
+  @Delete(':id')
+  @HttpCode(204)
+  remove(@Param('id') id: string) {
+    return this.clientesService.remove(+id);
+  }
 }
