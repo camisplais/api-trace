@@ -66,6 +66,10 @@ async findAll(query: FindClientesDto) {
       qb.andWhere('cliente.tipo = :tipo', { tipo: query.tipo });
     }
 
+    if (query.ciudad) {
+      qb.andWhere('cliente.ubicacion LIKE :ciudad', { ciudad: `%${query.ciudad}%` });
+    }
+
     if (query.search) {
       qb.andWhere('cliente.nombre LIKE :search', { search: `%${query.search}%` });
     }

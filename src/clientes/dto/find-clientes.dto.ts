@@ -17,4 +17,8 @@ export class FindClientesDto {
   @IsOptional()
   @IsString()
   search?: string;
+
+  @IsOptional()
+  @IsString()
+  ciudad?: string;
 }
