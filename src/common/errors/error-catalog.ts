@@ -126,7 +126,7 @@ export const ErrorCatalog = {
 
   VAL_REQUIRED_FIELD: {
     code: 'VAL_004',
-    status: 400,
+    status: 422,
     devMessageEn: 'Required field is missing: {fieldName}',
     devMessageEs: 'Falta un campo obligatorio: {fieldName}',
     userMessage: 'El campo {fieldName} es obligatorio',
@@ -150,7 +150,7 @@ export const ErrorCatalog = {
 
   VAL_INVALID_FIELD: {
     code: 'VAL_007',
-    status: 400,
+    status: 422,
     devMessageEn: '{fieldName} value does not match the expected format',
     devMessageEs: 'El valor de {fieldName} no coincide con el formato esperado',
     userMessage: '{fieldName} tiene un valor inválido',
