@@ -3,9 +3,12 @@ import {
   Post,
   UploadedFile,
   UseInterceptors,
+  HttpCode,
+  Body,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { EmbarquesService } from './embarques.service';
+import { ConfirmarImportEmbarquesDto } from './dto/confirmar-import-embarques.dto';
 
 @Controller('embarques')
 export class EmbarquesController {
@@ -15,5 +18,12 @@ export class EmbarquesController {
   @UseInterceptors(FileInterceptor('file'))
   async importarArchivo(@UploadedFile() file: Express.Multer.File) {
     return this.embarquesService.importarArchivo(file);
+  }
+
+  @Post('import/confirmar')
+  @HttpCode(201)
+  async confirmarImportacion(@Body() confirmarImportEmbarquesDto: ConfirmarImportEmbarquesDto) {
+    const data = await this.embarquesService.confirmarImportacion(confirmarImportEmbarquesDto);
+    return data;
   }
 }

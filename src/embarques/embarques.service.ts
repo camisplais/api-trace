@@ -4,6 +4,12 @@ import * as XLSX from 'xlsx';
 import { AppException } from 'src/common/errors/app.exception';
 import { ImportEmbarqueDto, ImportEmbarqueRow, parseTipo, parseEstado } from './dto/import-embarque.dto';
 import { Multer } from 'multer';
+import { InjectDataSource, InjectRepository  } from '@nestjs/typeorm';
+import { Embarque, Estado } from './entities/embarque.entity';
+import { In, Repository, DataSource } from 'typeorm';
+import { Cliente } from 'src/clientes/entities/cliente.entity';
+import { Empleado } from 'src/empleados/entities/empleado.entity';
+import { ConfirmarImportEmbarquesDto } from './dto/confirmar-import-embarques.dto';
 
 const EXPECTED_COLUMNS = [
   'plan_embarque',
@@ -11,11 +17,12 @@ const EXPECTED_COLUMNS = [
   'hora',
   'tipo',
   'tarima',
-  'cantidad_piezas',
-  'estado',
+  'cantidad_piezas'
 ];
 
 const EXTENSIONES_PERMITIDAS = ['.csv', '.xls', '.xlsx'];
+
+const empleado_temp = 1;
 
 interface FilaEmbarque {
   plan_embarque: string;
@@ -24,11 +31,17 @@ interface FilaEmbarque {
   tipo: string;
   tarima: string | number;
   cantidad_piezas: string | number;
-  estado: string;
 }
 
 @Injectable()
 export class EmbarquesService {
+
+  constructor(
+    @InjectRepository(Embarque) private readonly embarqueRepository: Repository<Embarque>,
+    @InjectRepository(Cliente) private readonly clienteRepository: Repository<Cliente>,
+    @InjectRepository(Empleado) private readonly empleadoRepository: Repository<Empleado>,
+    @InjectDataSource() private readonly dataSource: DataSource
+  ) {}
 
   async importarArchivo(file: Express.Multer.File) {
     if (!file) {
@@ -51,11 +64,15 @@ export class EmbarquesService {
         ? this.parsearCsv(file.buffer)
         : this.parsearExcel(file.buffer);
     } catch {
+console.log('Error al parsear el archivo, asegúrese de que el contenido sea válido.');
       throw new AppException('FILE_INVALID_CONTENT');
+      
     }
 
     if (rows.length === 0) {
+      console.log('El archivo está vacío o no contiene datos válidos.');
       throw new AppException('FILE_INVALID_CONTENT');
+      
     }
 
     const columns = Object.keys(rows[0]);
@@ -63,7 +80,10 @@ export class EmbarquesService {
     const extraColumns = columns.filter((c) => !EXPECTED_COLUMNS.includes(c));
 
     if (missingColumns.length > 0 || extraColumns.length > 0) {
+      console.log(`Columnas faltantes: ${missingColumns.join(', ')}`);
+      console.log(`Columnas extra: ${extraColumns.join(', ')}`);
       throw new AppException('FILE_INVALID_CONTENT');
+      
     }
 
     const data: ImportEmbarqueRow[] = rows.map((row, index) =>
@@ -119,12 +139,6 @@ export class EmbarquesService {
       errores.push('cantidad_piezas debe ser un número válido');
     }
 
-    const estado = parseEstado(String(row.estado));
-    if (!row.estado) {
-      errores.push('estado es obligatorio');
-    } else if (estado === null) {
-      errores.push(`estado inválido: "${row.estado}" (valores permitidos: activo, inactivo)`);
-    }
 
     const datos: ImportEmbarqueDto | null =
       errores.length === 0
@@ -135,12 +149,60 @@ export class EmbarquesService {
             tipo: tipo!,
             tarima,
             cantidad_piezas: cantidadPiezas,
-            estado: estado!,
           }
         : null;
 
     return { fila: index + 2, datos, errores };
   }
+
+  async confirmarImportacion(dto: ConfirmarImportEmbarquesDto) {
+     const clienteIds = [...new Set(dto.embarques.map((e) => e.cliente_id))];
+
+     const [clientes, empleadoCustomer] = await Promise.all([
+      this.clienteRepository.findBy({ id: In(clienteIds) }),
+      this.empleadoRepository.findOneBy({ id: empleado_temp }), 
+    ]);
+
+    const clienteMap = new Map(clientes.map((c) => [c.id, c]));
+
+    const clientesFaltantes = clienteIds.filter((id) => !clienteMap.has(id));
+
+    if (clientesFaltantes.length > 0) {
+          throw new AppException('VAL_RECORD_NOT_FOUND', {
+            record: 'cliente_id',
+          } );
+        }
+    if (!empleadoCustomer) {
+      throw new AppException('VAL_RECORD_NOT_FOUND', { record: 'empleado_id'});
+    }
+
+    return this.dataSource.transaction(async (manager) => {
+      const embarques = dto.embarques.map((item) =>
+        manager.create(Embarque, {
+          cliente: clienteMap.get(item.cliente_id),
+          empleado_customer: empleadoCustomer,
+          plan_embarque: item.plan_embarque,
+          fecha: new Date(item.fecha),
+          hora: item.hora,
+          tipo: item.tipo,
+          tarima: item.tarima,
+          cantidad_piezas: item.cantidad_piezas,
+          estado: Estado.ACTIVO,
+        }),
+      );
+      const guardados = await manager.save(Embarque, embarques);
+
+      return manager.find(Embarque, {
+      where: { id: In(guardados.map((e) => e.id)) },
+      relations: {
+        cliente: true,
+        empleado: true,
+      },
+      });
+    });
+  }
+
+  
 
   create(createEmbarqueDto: any) {
     return 'This action adds a new embarque';
