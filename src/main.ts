@@ -17,15 +17,13 @@ async function bootstrap() {
           'isNotEmpty' in constraints || 'isDefined' in constraints;
 
         if (esRequerido) {
-          return new AppException(
-            'VAL_REQUIRED_FIELD',
-            `El campo ${primer.property} es obligatorio`,
-          );
+          return new AppException('VAL_REQUIRED_FIELD', {
+          fieldName: primer.property,
+          });
         }
-        return new AppException(
-          'VAL_INVALID_FIELD',
-          `${primer.property} tiene un valor inválido`,
-        );
+        return new AppException('VAL_INVALID_FIELD', {
+          fieldName: primer.property,
+        });
       },
     }),
   );

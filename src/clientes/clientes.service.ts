@@ -26,7 +26,7 @@ export class ClientesService
       if (existente) {
         throw new AppException(
           'VAL_DUPLICATE_FIELD',
-          'nombre ya existente, debe ser único',
+          { fieldName: 'nombre' },
         );
       }
       const cliente = manager.create(Cliente, createClienteDto);
@@ -67,7 +67,7 @@ export class ClientesService
     return this.dataSource.transaction(async (manager) => {
       const cliente = await manager.findOne(Cliente, { where: { id } });
       if (!cliente) {
-        throw new AppException('VAL_RECORD_NOT_FOUND', 'Cliente no encontrado');
+        throw new AppException('VAL_RECORD_NOT_FOUND',{ record : 'Cliente' });
       }
 
       if (updateClienteDto.nombre !== cliente.nombre) {
@@ -77,7 +77,7 @@ export class ClientesService
         if (existente) {
           throw new AppException(
             'VAL_DUPLICATE_FIELD',
-            'nombre ya existente, debe ser único',
+            { fieldName : 'nombre' },
           );
         }
       }
