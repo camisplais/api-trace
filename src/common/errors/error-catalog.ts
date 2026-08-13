@@ -135,25 +135,25 @@ export const ErrorCatalog = {
   VAL_RECORD_NOT_FOUND: {
     code: 'VAL_005',
     status: 404,
-    devMessageEn: '{Record} not found in database',
-    devMessageEs: '{Registro} no encontrado en la base de datos',
-    userMessage: '{Registro} no encontrado',
+    devMessageEn: '{record} not found in database',
+    devMessageEs: '{record} no encontrado en la base de datos',
+    userMessage: '{record} no encontrado',
   },
 
   VAL_DUPLICATE_FIELD: {
     code: 'VAL_006',
     status: 409,
-    devMessageEn: '{FieldName} already exists, must be unique',
-    devMessageEs: 'El valor de {Campo} ya existe, debe ser único',
-    userMessage: '{Campo} ya existente, debe ser único',
+    devMessageEn: '{fieldName} already exists, must be unique',
+    devMessageEs: 'El valor de {fieldName} ya existe, debe ser único',
+    userMessage: '{fieldName} ya existente, debe ser único',
   },
 
   VAL_INVALID_FIELD: {
     code: 'VAL_007',
     status: 422,
-    devMessageEn: '{FieldName} value does not match the expected format',
-    devMessageEs: 'El valor de {Campo} no coincide con el formato esperado',
-    userMessage: '{Campo} tiene un valor inválido',
+    devMessageEn: '{fieldName} value does not match the expected format',
+    devMessageEs: 'El valor de {fieldName} no coincide con el formato esperado',
+    userMessage: '{fieldName} tiene un valor inválido',
   },
 
   VAL_CHANGE_PASSWORD: {
