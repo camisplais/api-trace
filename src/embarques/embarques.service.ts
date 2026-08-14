@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { parse } from 'csv-parse/sync';
 import * as XLSX from 'xlsx';
 import { AppException } from 'src/common/errors/app.exception';
@@ -10,6 +10,7 @@ import { In, Repository, DataSource } from 'typeorm';
 import { Cliente } from 'src/clientes/entities/cliente.entity';
 import { Empleado } from 'src/empleados/entities/empleado.entity';
 import { ConfirmarImportEmbarquesDto } from './dto/confirmar-import-embarques.dto';
+import { DocCliente } from 'src/doc_cliente/entities/doc_cliente.entity';
 
 const EXPECTED_COLUMNS = [
   'plan_embarque',
@@ -35,7 +36,6 @@ interface FilaEmbarque {
 
 @Injectable()
 export class EmbarquesService {
-
   constructor(
     @InjectRepository(Embarque) private readonly embarqueRepository: Repository<Embarque>,
     @InjectRepository(Cliente) private readonly clienteRepository: Repository<Cliente>,
@@ -201,8 +201,6 @@ console.log('Error al parsear el archivo, asegúrese de que el contenido sea vá
       });
     });
   }
-
-  
 
   create(createEmbarqueDto: any) {
     return 'This action adds a new embarque';

@@ -1,6 +1,9 @@
 import {
   Controller,
+  Get,
   Post,
+  Param,
+  ParseIntPipe,
   UploadedFile,
   UseInterceptors,
   HttpCode,
