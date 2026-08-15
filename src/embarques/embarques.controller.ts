@@ -8,10 +8,12 @@ import {
   UseInterceptors,
   HttpCode,
   Body,
+  Query,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { EmbarquesService } from './embarques.service';
 import { ConfirmarImportEmbarquesDto } from './dto/confirmar-import-embarques.dto';
+import { FiltroEmbarquesDto } from './dto/filtro-embarques.dto';
 
 @Controller('embarques')
 export class EmbarquesController {
@@ -33,5 +35,11 @@ export class EmbarquesController {
   @Get(':id/pruebas-entrega')
   async getDocumentosRequeridos(@Param('id', ParseIntPipe) id: number) {
     return this.embarquesService.getDocumentosRequeridos(id);
+  }
+
+  @Get()
+  async findAll(@Query() filtros: FiltroEmbarquesDto) {
+    const { data, meta } = await this.embarquesService.findAllFiltrado(filtros);
+    return { data, meta, msg:null };
   }
 }
