@@ -40,6 +40,7 @@ export class EmbarquesService {
     @InjectRepository(Embarque) private readonly embarqueRepository: Repository<Embarque>,
     @InjectRepository(Cliente) private readonly clienteRepository: Repository<Cliente>,
     @InjectRepository(Empleado) private readonly empleadoRepository: Repository<Empleado>,
+    @InjectRepository(DocCliente) private readonly docClienteRepo: Repository<DocCliente>,
     @InjectDataSource() private readonly dataSource: DataSource
   ) {}
 
@@ -64,7 +65,7 @@ export class EmbarquesService {
         ? this.parsearCsv(file.buffer)
         : this.parsearExcel(file.buffer);
     } catch {
-console.log('Error al parsear el archivo, asegúrese de que el contenido sea válido.');
+      console.log('Error al parsear el archivo, asegúrese de que el contenido sea válido.');
       throw new AppException('FILE_INVALID_CONTENT');
       
     }
@@ -202,6 +203,25 @@ console.log('Error al parsear el archivo, asegúrese de que el contenido sea vá
     });
   }
 
+  async getDocumentosRequeridos(embarqueId: number) {
+    const embarque = await this.embarqueRepository.findOne({
+      where: { id: embarqueId },
+    });
+
+    if (!embarque) {
+      throw new NotFoundException(`Embarque ${embarqueId} no encontrado`);
+    }
+
+    const docCliente = await this.docClienteRepo.find({
+      where: { cliente: { id: embarque.cliente.id } },
+    });
+
+    return docCliente.map((dc) => ({
+      doc_cliente_id: dc.id,
+      nombre: dc.documento.nombre,
+    }));
+  }
+  
   create(createEmbarqueDto: any) {
     return 'This action adds a new embarque';
   }

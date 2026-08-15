@@ -164,6 +164,30 @@ export const ErrorCatalog = {
     userMessage: 'La nueva contraseña debe ser diferente de la contraseña actual',
   },
 
+  TRANS_NOT_AVAILABLE: {
+    code: 'TRANS_001',
+    status: 409,
+    devMessageEn: 'The selected transport is already in use in another active trip',
+    devMessageEs: 'El transporte seleccionado ya está en uso en otro viaje activo',
+    userMessage: 'El transporte seleccionado ya está en uso, elige otro',
+  },
+
+  EMP_NOT_AVAILABLE: {
+    code: 'EMP_001',
+    status: 409,
+    devMessageEn: 'The selected driver is already occupied in another trip',
+    devMessageEs: 'El chofer seleccionado ya está ocupado en otro viaje',
+    userMessage: 'El chofer seleccionado ya no está disponible, elige otro',
+  },
+
+  EMB_ALREADY_ASSIGNED: {
+    code: 'EMB_002',
+    status: 409,
+    devMessageEn: 'The shipment is already assigned to another trip',
+    devMessageEs: 'El embarque ya está asignado a otro viaje',
+    userMessage: 'Este embarque ya fue asignado a un viaje',
+  },
+
   // SERVER
   SERVER_ERROR: {
     code: 'SRV_001',
