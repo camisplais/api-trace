@@ -13,7 +13,6 @@ import { Empleado } from 'src/empleados/entities/empleado.entity';
 import { AppException } from 'src/common/errors/app.exception';
 import { Embarque } from 'src/embarques/entities/embarque.entity';
 import { FindViajesDto } from './dto/find-viajes.dto';
-import { AppException } from 'src/common/errors/app.exception';
 
 @Injectable()
 export class ViajesService {

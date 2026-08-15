@@ -11,6 +11,7 @@ import { Cliente } from 'src/clientes/entities/cliente.entity';
 import { Empleado } from 'src/empleados/entities/empleado.entity';
 import { ConfirmarImportEmbarquesDto } from './dto/confirmar-import-embarques.dto';
 import { DocCliente } from 'src/doc_cliente/entities/doc_cliente.entity';
+import { FiltroEmbarquesDto } from './dto/filtro-embarques.dto';
 
 const EXPECTED_COLUMNS = [
   'plan_embarque',
@@ -203,7 +204,58 @@ export class EmbarquesService {
     });
   }
 
-  async getDocumentosRequeridos(embarqueId: number) {
+  async findAllFiltrado(filtros: FiltroEmbarquesDto) {
+    const {page = 1, limit = 5 } = filtros;
+
+    const query = this.embarqueRepository
+      .createQueryBuilder('embarque')
+      .leftJoinAndSelect('embarque.cliente', 'cliente')
+      .leftJoinAndSelect('embarque.empleado', 'empleado')
+
+      if (filtros.cliente_id) {
+        query.andWhere('cliente.id = :clienteId', {
+          clienteId: filtros.cliente_id
+        })
+      }
+
+      if (filtros.empleado_id) {
+        query.andWhere('empleado.id = :empleadoId', {
+          empleadoId: filtros.empleado_id,
+        });
+      }
+
+      if (filtros.estado){
+        query.andWhere('embarque.estado = :estado', { estado: filtros.estado });
+      }
+
+      if (filtros.tipo) {
+        query.andWhere('embarque.tipo = :tipo', { tipo: filtros.tipo });
+      }
+      if (filtros.fecha_desde) {
+        query.andWhere('embarque.fecha >= :fechaDesde', { fechaDesde: filtros.fecha_desde });
+      }
+      if (filtros.fecha_hasta) {
+        query.andWhere('embarque.fecha <= :fechaHasta', { fechaHasta: filtros.fecha_hasta });
+      }
+
+      query
+      .orderBy('embarque.fecha', 'DESC')
+      .skip((page - 1) * limit)
+      .take(limit);
+
+      const [data, total] = await query.getManyAndCount();
+
+      return {
+        data,
+        meta: {
+          total,
+          page,
+          limit,
+          totalPages: Math.ceil(total / limit),
+        }
+      };
+  }
+    async getDocumentosRequeridos(embarqueId: number) {
     const embarque = await this.embarqueRepository.findOne({
       where: { id: embarqueId },
     });
