@@ -18,6 +18,12 @@ export class EmpleadosController {
     return this.empleadosService.findAll(query);
   }
 
+    @Get('choferes')
+  findChoferes() {
+    return this.empleadosService.findChoferes();
+  }
+
+
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.empleadosService.findOne(+id);

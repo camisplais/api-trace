@@ -50,6 +50,27 @@ export class EmpleadosService {
     };
   }
 
+    async findChoferes() {
+    const empleados = await this.empleadoRepo
+      .createQueryBuilder('empleado')
+      .where('LOWER(empleado.puesto) LIKE :puesto', { puesto: '%chofer%' })
+      .orderBy('empleado.nombre', 'ASC')
+      .getMany();
+
+    return {
+      data: empleados.map((empleado) => ({
+        id: empleado.id,
+        no_empleado: empleado.no_empleado,
+        nombre: empleado.nombre,
+        apellido_paterno: empleado.apellido_paterno,
+        apellido_materno: empleado.apellido_materno,
+        puesto: empleado.puesto,
+        departamento: empleado.departamento,
+        estado: empleado.estado,
+      })),
+    };
+  }
+
   findOne(id: number) {
     return `This action returns a #${id} empleado`;
   }

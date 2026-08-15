@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Transporte } from './entities/transporte.entity';
+import { Transporte, Estado } from './entities/transporte.entity';
 import { CreateTransporteDto } from './dto/create-transporte.dto';
 import { UpdateTransporteDto } from './dto/update-transporte.dto';
 import { FindTransportesDto } from './dto/find-transportes.dto';
@@ -27,6 +27,23 @@ export class TransportesService {
     qb.orderBy('transporte.id', 'DESC');
 
     return qb.getMany();
+  }
+
+    async findEnPlanta() {
+    const transportes = await this.transporteRepo.find({
+      where: { estado: Estado.PLANTA },
+      order: { placas: 'ASC' },
+    });
+
+    return {
+      data: transportes.map((transporte) => ({
+        id: transporte.id,
+        placas: transporte.placas,
+        marca: transporte.marca,
+        carga_util: transporte.carga_util,
+        estado: transporte.estado,
+      })),
+    };
   }
 
   findOne(id: number) {

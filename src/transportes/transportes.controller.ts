@@ -20,6 +20,11 @@ export class TransportesController {
 
   // el resto igual
 
+    @Get('planta')
+  findEnPlanta() {
+    return this.transportesService.findEnPlanta();
+  }
+
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.transportesService.findOne(+id);
