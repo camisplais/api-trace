@@ -29,4 +29,9 @@ export class EmbarquesController {
     const data = await this.embarquesService.confirmarImportacion(confirmarImportEmbarquesDto);
     return data;
   }
+
+  @Get(':id/pruebas-entrega')
+  async getDocumentosRequeridos(@Param('id', ParseIntPipe) id: number) {
+    return this.embarquesService.getDocumentosRequeridos(id);
+  }
 }

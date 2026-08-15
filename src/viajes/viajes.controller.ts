@@ -1,16 +1,26 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, ParseIntPipe, Query} from '@nestjs/common';
 import { ViajesService } from './viajes.service';
-import { CreateViajeDto } from './dto/create-viaje.dto';
+import { CrearViajeDto } from './dto/create-viaje.dto';
 import { UpdateViajeDto } from './dto/update-viaje.dto';
 import { FindViajesDto } from './dto/find-viajes.dto';
+import { AgregarEmbarqueDto } from './dto/agregar-embarque.dto';
 
 @Controller('viajes')
 export class ViajesController {
   constructor(private readonly viajesService: ViajesService) {}
 
   @Post()
-  create(@Body() createViajeDto: CreateViajeDto) {
-    return this.viajesService.create(createViajeDto);
+  async crearViaje(@Body() dto: CrearViajeDto) {
+    return this.viajesService.crearViaje(dto);
+  }
+
+  //el viaje va en el path y el embrque en el body
+   @Post(':id/embarques')
+  async agregarEmbarque(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: AgregarEmbarqueDto,
+  ) {
+    return this.viajesService.agregarEmbarque(id, dto);
   }
 
   @Get()
