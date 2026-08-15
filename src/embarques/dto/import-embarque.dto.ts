@@ -8,7 +8,6 @@ export interface ImportEmbarqueDto {
     tipo: Tipo;
     tarima: number;
     cantidad_piezas: number;
-    estado: Estado;
 }
 
 export interface ImportEmbarqueRow {
