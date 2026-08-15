@@ -1,4 +1,5 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
+
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query, ParseIntPipe } from '@nestjs/common';
 import { ViajesService } from './viajes.service';
 import { CreateViajeDto } from './dto/create-viaje.dto';
 import { UpdateViajeDto } from './dto/update-viaje.dto';
@@ -19,8 +20,8 @@ export class ViajesController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.viajesService.findOne(+id);
+  findOne(@Param('id', ParseIntPipe) id: number) {
+    return this.viajesService.findOne(id);
   }
 
   @Patch(':id')

@@ -5,6 +5,7 @@ import { Viaje } from './entities/viaje.entity';
 import { CreateViajeDto } from './dto/create-viaje.dto';
 import { UpdateViajeDto } from './dto/update-viaje.dto';
 import { FindViajesDto } from './dto/find-viajes.dto';
+import { AppException } from 'src/common/errors/app.exception';
 
 @Injectable()
 export class ViajesService {
@@ -45,7 +46,7 @@ export class ViajesService {
       .orderBy('viaje.id', 'DESC')
       .skip((page - 1) * perPage)
       .take(perPage)
-      .getRawMany<{ id: number }>();
+      .getRawMany();
 
     const ids = rows.map((row) => row.id);
 
@@ -63,22 +64,42 @@ export class ViajesService {
       : [];
 
     return {
-      data: viajes.map((viaje) => ({
-        ...viaje,
-        embarques: viaje.viajeEmbarques?.map((ve) => ve.embarque) ?? [],
-        viajeEmbarques: undefined,
-      })),
+      data: viajes.map((viaje) => this.formatViaje(viaje)),
       meta: {
         total,
         page,
         per_page: perPage,
         last_page: Math.ceil(total / perPage) || 1,
       },
+      msg: {
+        code: 'OK',
+        msg: 'Lista de viajes',
+      },
     };
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} viaje`;
+  async findOne(id: number) {
+    const viaje = await this.viajeRepo.findOne({
+      where: { id },
+      relations: {
+        empleado_chofer: true,
+        empleado_embarque: true,
+        transporte: true,
+        viajeEmbarques: { embarque: true },
+      },
+    });
+
+    if (!viaje) {
+      throw new AppException('VAL_RECORD_NOT_FOUND', { record: 'Viaje' });
+    }
+
+    return {
+      data: this.formatViaje(viaje),
+      msg: {
+        code: 'OK',
+        msg: 'Viaje encontrado',
+      },
+    };
   }
 
   update(id: number, updateViajeDto: UpdateViajeDto) {
@@ -87,5 +108,26 @@ export class ViajesService {
 
   remove(id: number) {
     return `This action removes a #${id} viaje`;
+  }
+
+  private formatViaje(viaje: Viaje) {
+    const viajeEmbarques = viaje.viajeEmbarques ?? [];
+
+    return {
+      id: viaje.id,
+      empleado_chofer_id: viaje.empleado_chofer?.id,
+      empleado_chofer: viaje.empleado_chofer,
+      empleado_embarques_id: viaje.empleado_embarque?.id,
+      empleado_embarques: viaje.empleado_embarque,
+      transporte_id: viaje.transporte?.id,
+      transporte: viaje.transporte,
+      viaje_embarques: viajeEmbarques.map((ve) => ({
+        id: ve.id,
+        viaje_id: viaje.id,
+        embarque_id: ve.embarque?.id,
+        embarque: ve.embarque,
+      })),
+      embarques: viajeEmbarques.map((ve) => ve.embarque),
+    };
   }
 }
