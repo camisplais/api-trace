@@ -1,4 +1,11 @@
-import { PartialType } from '@nestjs/mapped-types';
-import { CreateTransporteDto } from './create-transporte.dto';
+import { IsString, IsNotEmpty, MaxLength, IsOptional } from 'class-validator';
 
-export class UpdateTransporteDto extends PartialType(CreateTransporteDto) {}
+// Segun el diseno (EDITAR TRANSPORTE) solo son editables la placa y la imagen.
+// La imagen se recibe como archivo (no como campo del body), por eso no va aqui.
+export class UpdateTransporteDto {
+  @IsOptional()
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(10)
+  placas?: string;
+}
