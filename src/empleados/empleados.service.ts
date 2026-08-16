@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Empleado } from './entities/empleado.entity';
+import { Empleado, Estado } from './entities/empleado.entity';
 import { CreateEmpleadoDto } from './dto/create-empleado.dto';
 import { UpdateEmpleadoDto } from './dto/update-empleado.dto';
 import { FindEmpleadosDto } from './dto/find-empleados.dto';
@@ -52,10 +52,11 @@ export class EmpleadosService {
 
     async findChoferes() {
     const empleados = await this.empleadoRepo
-      .createQueryBuilder('empleado')
-      .where('LOWER(empleado.puesto) LIKE :puesto', { puesto: '%chofer%' })
-      .orderBy('empleado.nombre', 'ASC')
-      .getMany();
+    .createQueryBuilder('empleado')
+    .where('LOWER(empleado.puesto) LIKE :puesto', { puesto: '%chofer%' })
+    .andWhere('empleado.estado = :estado', { estado: Estado.DISPONIBLE })
+    .orderBy('empleado.nombre', 'ASC')
+    .getMany();
 
     return {
       data: empleados.map((empleado) => ({
