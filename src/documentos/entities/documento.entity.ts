@@ -14,6 +14,9 @@ export class Documento {
   @Column({ type: 'varchar', length:100, nullable:true})
   descripcion?: string;
 
+  @Column({ type: 'boolean', default: false })
+  soloMedico?: boolean;
+
   @CreateDateColumn()
   createdAt!: Date;
   

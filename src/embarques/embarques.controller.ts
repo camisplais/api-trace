@@ -1,34 +1,45 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Param,
+  ParseIntPipe,
+  UploadedFile,
+  UseInterceptors,
+  HttpCode,
+  Body,
+  Query,
+} from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { EmbarquesService } from './embarques.service';
-import { CreateEmbarqueDto } from './dto/create-embarque.dto';
-import { UpdateEmbarqueDto } from './dto/update-embarque.dto';
+import { ConfirmarImportEmbarquesDto } from './dto/confirmar-import-embarques.dto';
+import { FiltroEmbarquesDto } from './dto/filtro-embarques.dto';
 
 @Controller('embarques')
 export class EmbarquesController {
   constructor(private readonly embarquesService: EmbarquesService) {}
 
-  @Post()
-  create(@Body() createEmbarqueDto: CreateEmbarqueDto) {
-    return this.embarquesService.create(createEmbarqueDto);
+  @Post('import/preview')
+  @UseInterceptors(FileInterceptor('file'))
+  async importarArchivo(@UploadedFile() file: Express.Multer.File) {
+    return this.embarquesService.importarArchivo(file);
+  }
+
+  @Post('import/confirmar')
+  @HttpCode(201)
+  async confirmarImportacion(@Body() confirmarImportEmbarquesDto: ConfirmarImportEmbarquesDto) {
+    const data = await this.embarquesService.confirmarImportacion(confirmarImportEmbarquesDto);
+    return data;
+  }
+
+  @Get(':id/pruebas-entrega')
+  async getDocumentosRequeridos(@Param('id', ParseIntPipe) id: number) {
+    return this.embarquesService.getDocumentosRequeridos(id);
   }
 
   @Get()
-  findAll() {
-    return this.embarquesService.findAll();
-  }
-
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.embarquesService.findOne(+id);
-  }
-
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateEmbarqueDto: UpdateEmbarqueDto) {
-    return this.embarquesService.update(+id, updateEmbarqueDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.embarquesService.remove(+id);
+  async findAll(@Query() filtros: FiltroEmbarquesDto) {
+    const { data, meta } = await this.embarquesService.findAllFiltrado(filtros);
+    return { data, meta, msg:null };
   }
 }
