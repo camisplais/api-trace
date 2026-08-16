@@ -27,7 +27,13 @@ export class Transporte
 
   @Column({ type: 'enum', enum:Estado, nullable:true})
     estado?: Estado;
-  
+
+  @CreateDateColumn()
+  createdAt?: Date;
+
+  @DeleteDateColumn()
+  deletedAt?: Date;
+
   @OneToMany(() => Viaje, (viaje) => viaje.transporte)
   viajes!: Viaje[];
 }
