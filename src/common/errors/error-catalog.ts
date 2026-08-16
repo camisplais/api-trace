@@ -32,6 +32,23 @@ export const ErrorCatalog = {
     userMessage: 'El contenido del archivo no es el correcto',
   },
 
+  FILE_REQUIRED: {
+    code: 'FILE_004',
+    status: 422,
+    devMessageEn: 'No file was provided',
+    devMessageEs: 'No se envió ningún archivo',
+    userMessage: 'Debes adjuntar un archivo',
+  },
+
+  FILE_INVALID_TYPE_: {
+  code: 'FILE_005',
+  status: 400,
+  devMessageEn: 'Invalid file type, expected PDF, Excel, JPG or PNG',
+  devMessageEs: 'Tipo de archivo inválido, se esperaba PDF, Excel, JPG o PNG',
+  userMessage: 'El formato del archivo no es válido. Solo se aceptan PDF, Excel, JPG o PNG',
+},
+
+
   // QRs
   QR_INVALID_FORMAT: {
     code: 'QR_001',
