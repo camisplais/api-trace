@@ -1,4 +1,4 @@
-import { DataSource } from 'typeorm';
+import { DataSource, In } from 'typeorm';
 import { Viaje } from 'src/viajes/entities/viaje.entity';
 import { Empleado } from 'src/empleados/entities/empleado.entity';
 import { Transporte } from 'src/transportes/entities/transporte.entity';
@@ -8,27 +8,31 @@ export async function seedViajes(dataSource: DataSource) {
   const empleadoRepo = dataSource.getRepository(Empleado);
   const transporteRepo = dataSource.getRepository(Transporte);
 
-  const empleados = await empleadoRepo.find();
-  const transportes = await transporteRepo.find();
-
-  if (empleados.length === 0 || transportes.length === 0) {
-    console.warn(
-      'No hay empleados o transportes en la BD. Corre esos seeds primero.',
-    );
-    return;
-  }
-
-  // choferes: por puesto; el resto sirve como empleado de embarque
-  const choferes = empleados.filter((e) =>
+  // Obtener chóferes filtrando por puesto
+  const todosEmpleados = await empleadoRepo.find();
+  const choferes = todosEmpleados.filter((e) =>
     e.puesto.toLowerCase().includes('chofer'),
   );
-  const noChoferes = empleados.filter(
-    (e) => !e.puesto.toLowerCase().includes('chofer'),
-  );
 
-  if (choferes.length === 0 || noChoferes.length === 0) {
+  // Obtener únicamente empleados de embarque con IDs 3, 6 y 7
+  const empleadosEmbarque = await empleadoRepo.find({
+    where: { id: In([3, 6, 7]) },
+    order: { id: 'ASC' },
+  });
+
+  // Obtener únicamente transportes con IDs 1, 3, 5, 7 y 9
+  const transportes = await transporteRepo.find({
+    where: { id: In([2, 4, 6, 8, 10]) },
+    order: { id: 'ASC' },
+  });
+
+  if (
+    choferes.length === 0 ||
+    empleadosEmbarque.length === 0 ||
+    transportes.length === 0
+  ) {
     console.warn(
-      'Faltan choferes o empleados de embarque para armar viajes.',
+      'Faltan chóferes, empleados de embarque (IDs 3, 6, 7) o transportes (IDs 1, 3, 5, 7, 9). Corre esos seeds primero.',
     );
     return;
   }
@@ -43,7 +47,7 @@ export async function seedViajes(dataSource: DataSource) {
 
   for (let i = existentes; i < CANTIDAD; i++) {
     const empleado_chofer = choferes[i % choferes.length];
-    const empleado_embarque = noChoferes[i % noChoferes.length];
+    const empleado_embarque = empleadosEmbarque[i % empleadosEmbarque.length];
     const transporte = transportes[i % transportes.length];
 
     await viajeRepo.save(

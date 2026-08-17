@@ -170,6 +170,18 @@ export async function seedEmpleados(dataSource: DataSource) {
       puesto: 'Guardia de Caseta',
       estado: Estado.OCUPADO,
     },
+
+    {
+      no_empleado: 1,
+      nombre: 'POR ASIGNAR',
+      apellido_paterno: 'POR ASIGNAR',
+      apellido_materno: 'POR ASIGNAR',
+      fecha_nacimiento: new Date('1900-01-01'),
+      fecha_ingreso: new Date('1900-01-01'),
+      departamento: Departamento.SEGURIDAD,
+      puesto: 'POR ASIGNAR',
+      estado: Estado.OCUPADO,
+    }
   ];
 
   for (const empleado of empleados) {
