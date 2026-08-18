@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, ParseIntPipe } from '@nestjs/common';
 import { SeguimientoViajeService } from './seguimiento_viaje.service';
 import { CreateSeguimientoViajeDto } from './dto/create-seguimiento_viaje.dto';
 import { UpdateSeguimientoViajeDto } from './dto/update-seguimiento_viaje.dto';
@@ -12,9 +12,9 @@ export class SeguimientoViajeController {
     return this.seguimientoViajeService.create(createSeguimientoViajeDto);
   }
 
-  @Get()
-  findAll() {
-    return this.seguimientoViajeService.findAll();
+  @Get('viaje/:viajeId')
+  async obtenerPorViaje(@Param('viajeId', ParseIntPipe) viajeId: number) {
+    return this.seguimientoViajeService.obtenerPorViaje(viajeId);
   }
 
   @Get(':id')

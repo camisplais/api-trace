@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ConfigService } from '@nestjs/config';
 import { Repository } from 'typeorm';
-import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
+import { S3Client, PutObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3';
 import { extname } from 'path';
 import { PruebaEntregaEmbarque } from './entities/prueba_entrega_embarque.entity';
 import { Embarque } from '../embarques/entities/embarque.entity';
@@ -10,6 +10,7 @@ import { DocCliente } from '../doc_cliente/entities/doc_cliente.entity';
 import { CreatePruebaEntregaEmbarqueDto } from './dto/create-prueba_entrega_embarque.dto';
 import { UpdatePruebaEntregaEmbarqueDto } from './dto/update-prueba_entrega_embarque.dto';
 import { AppException } from 'src/common/errors/app.exception';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
 @Injectable()
 export class PruebaEntregaEmbarqueService {
@@ -120,6 +121,43 @@ export class PruebaEntregaEmbarqueService {
       });
     }
     return prueba;
+  }
+
+  async findByEmbarque(embarqueId: number) {
+    const pruebas = await this.pruebaRepo.find({
+      where: { embarque: { id: embarqueId } },
+      relations: { docCliente: { documento: true } }, // Asegúrate de cargar las relaciones si no están en eager
+      order: { createdAt: 'DESC' },
+    });
+
+    if (!pruebas || pruebas.length === 0) {
+      return {
+        data: [],
+        msg: {
+          msg: 'sin documentos',
+        },
+      };
+    }
+
+    const data = await Promise.all(
+      pruebas.map(async (p) => ({
+        id: p.id,
+        documento_nombre: p.docCliente?.documento?.nombre,
+        url: await getSignedUrl(
+          this.s3,
+          new GetObjectCommand({ Bucket: this.bucket, Key: p.ruta_imagen }),
+          { expiresIn: 3600 },
+        ),
+        createdAt: p.createdAt,
+      })),
+    );
+
+    return {
+      data,
+      msg: {
+        msg: 'Documentos encontrados',
+      },
+    };
   }
 
   update(id: number, updatePruebaEntregaEmbarqueDto: UpdatePruebaEntregaEmbarqueDto) {
