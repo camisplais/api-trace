@@ -13,9 +13,11 @@ import { Empleado } from 'src/empleados/entities/empleado.entity';
 import { AppException } from 'src/common/errors/app.exception';
 import { Embarque } from 'src/embarques/entities/embarque.entity';
 import { FindViajesDto } from './dto/find-viajes.dto';
+import { SeguimientoViaje } from 'src/seguimiento_viaje/entities/seguimiento_viaje.entity';
 
 @Injectable()
 export class ViajesService {
+  private readonly EMPLEADO_POR_ASIGNAR_ID=16
 
   constructor(
     @InjectDataSource()
@@ -30,6 +32,9 @@ export class ViajesService {
     private readonly embarqueRepo: Repository<Embarque>,
     @InjectRepository(ViajeEmbarque)
     private readonly viajeEmbarqueRepo: Repository<ViajeEmbarque>,
+    @InjectRepository(SeguimientoViaje)
+    private readonly seguimientoRepo: Repository<SeguimientoViaje>,
+
   ) {}
   
     async crearViaje(dto: CrearViajeDto)
@@ -85,6 +90,18 @@ export class ViajesService {
           embarque: { id: dto.embarque_id },
         });
         await manager.save(viajeEmbarque);
+
+        // 5. Crear el registro inicial de seguimiento
+        const seguimiento = manager.create(SeguimientoViaje, {
+          viaje: { id: viajeGuardado.id },
+          entrada: undefined,
+          salida: undefined,
+          empleado_caseta_entrada: { id: this.EMPLEADO_POR_ASIGNAR_ID },
+          empleado_caseta_salida: { id: this.EMPLEADO_POR_ASIGNAR_ID },
+          empleado_qr_salida: { id: this.EMPLEADO_POR_ASIGNAR_ID },
+          qr: 'PENDIENTE',
+        });
+        await manager.save(seguimiento);
 
         await manager.update(Transporte, transporte.id, {
           estado: EstadoTransporte.VIAJE,

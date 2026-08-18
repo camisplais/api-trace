@@ -6,9 +6,11 @@ import { Viaje } from './entities/viaje.entity';
 import { ViajeEmbarque } from 'src/viaje_embarque/entities/viaje_embarque.entity';
 import { Empleado } from 'src/empleados/entities/empleado.entity';
 import { Transporte } from 'src/transportes/entities/transporte.entity';
+import { Embarque } from 'src/embarques/entities/embarque.entity';
+import { SeguimientoViaje } from 'src/seguimiento_viaje/entities/seguimiento_viaje.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Viaje, ViajeEmbarque, Empleado, Transporte])],
+  imports: [TypeOrmModule.forFeature([Viaje, ViajeEmbarque, Empleado, Transporte, Embarque,SeguimientoViaje ])],
   controllers: [ViajesController],
   providers: [ViajesService],
 })
