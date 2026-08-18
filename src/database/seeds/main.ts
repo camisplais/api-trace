@@ -12,6 +12,8 @@ import { seedViajes } from './seed-viajes';
 import { seedViajeEmbarque } from './seed-viaje-embarque';
 import { seedPruebaEntregaEmbarque } from './seed-prueba-entrega-embarque';
 import { seedSeguimientoViaje } from './seed-seguimiento-viaje';
+import { seedRoles } from './seed-roles';
+import { seedUsuarios } from './seed-usuarios';
 
 async function bootstrap() {
   const app = await NestFactory.createApplicationContext(AppModule);
@@ -29,6 +31,8 @@ async function bootstrap() {
     await seedViajeEmbarque(dataSource);
     await seedPruebaEntregaEmbarque(dataSource);
     await seedSeguimientoViaje(dataSource);
+    await seedRoles(dataSource);
+    await seedUsuarios(dataSource);
     console.log('Seed completado');
   } catch (err) {
     console.error('Error en el seed', err);
