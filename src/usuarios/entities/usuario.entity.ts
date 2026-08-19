@@ -1,7 +1,6 @@
 import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, DeleteDateColumn, ManyToOne,OneToOne,OneToMany,JoinColumn } from 'typeorm';
 import { Role } from 'src/roles/entities/role.entity';
 import { Empleado } from 'src/empleados/entities/empleado.entity';
-import { RefreshToken } from 'src/refresh_token/entities/refresh_token.entity';
 import { OtpToken } from 'src/otp_token/entities/otp_token.entity';
 import { AuditoriaLog } from 'src/auditoria_log/entities/auditoria_log.entity';
 
@@ -40,9 +39,6 @@ export class Usuario
 
   @Column({ type: 'enum', enum:Estado, default:Estado.ACTIVO})
   estado!: Estado;
-
-  @OneToMany(() => RefreshToken, (refreshToken) => refreshToken.usuario)
-  refreshTokens!: RefreshToken[];
 
   @OneToOne(() => OtpToken, (otpToken) => otpToken.usuario)
   otpToken?: OtpToken;

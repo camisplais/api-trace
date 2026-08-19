@@ -2,21 +2,8 @@ import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateCol
 import { ViajeEmbarque } from 'src/viaje_embarque/entities/viaje_embarque.entity';
 import { Empleado } from 'src/empleados/entities/empleado.entity';
 import { Notificacion } from 'src/notificaciones/entities/notificacione.entity';
-
-export enum Tipo
-{
-    SOLICITARQR='solicitarqr',
-    PE_DESFASADAS='pe_desfasadas',
-    PE_PENDIENTES='pe_pendientes',
-    ESTATUS_SALIDA='estatus_salida',
-}
-
-export enum Estado
-{
-    PENDIENTE='pendiente',
-    ACEPTADO='aceptado',
-    RECHAZADO='rechazado',
-}
+import { Tipo } from '../enums/tipo.enum';
+import { Estado } from '../enums/estado.enum';
 
 @Entity('solicitudes')
 

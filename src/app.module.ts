@@ -9,7 +9,6 @@ import { EmpleadosModule } from './empleados/empleados.module';
 import { ClientesModule } from './clientes/clientes.module';
 import { DocumentosModule } from './documentos/documentos.module';
 import { TransportesModule } from './transportes/transportes.module';
-import { RefreshTokenModule } from './refresh_token/refresh_token.module';
 import { OtpTokenModule } from './otp_token/otp_token.module';
 import { AuditoriaLogModule } from './auditoria_log/auditoria_log.module';
 import { DocClienteModule } from './doc_cliente/doc_cliente.module';
@@ -20,6 +19,8 @@ import { SeguimientoViajeModule } from './seguimiento_viaje/seguimiento_viaje.mo
 import { ViajeEmbarqueModule } from './viaje_embarque/viaje_embarque.module';
 import { SolicitudesModule } from './solicitudes/solicitudes.module';
 import { NotificacionesModule } from './notificaciones/notificaciones.module';
+import { AuthModule } from './auth/auth.module';
+import { QRModule } from './codigoQR/qr.module';
 
 @Module({
   imports: [
@@ -40,13 +41,14 @@ import { NotificacionesModule } from './notificaciones/notificaciones.module';
         synchronize: true,
       }),
     }),
+    AuthModule,
     RolesModule,
+    QRModule,
     UsuariosModule,
     EmpleadosModule,
     ClientesModule,
     DocumentosModule,
     TransportesModule,
-    RefreshTokenModule,
     OtpTokenModule,
     AuditoriaLogModule,
     DocClienteModule,
@@ -57,6 +59,7 @@ import { NotificacionesModule } from './notificaciones/notificaciones.module';
     ViajeEmbarqueModule,
     SolicitudesModule,
     NotificacionesModule,
+    SolicitudesModule
   ],
   controllers: [AppController],
   providers: [AppService],
