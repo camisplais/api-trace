@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, HttpCode } from '@nestjs/common';
 import { SolicitudesService } from './solicitudes.service';
 import { CreateSolicitudeDto } from './dto/create-solicitude.dto';
 import { UpdateSolicitudeDto } from './dto/update-solicitude.dto';
@@ -8,7 +8,8 @@ export class SolicitudesController {
   constructor(private readonly solicitudesService: SolicitudesService) {}
 
   @Post()
-  create(@Body() createSolicitudeDto: CreateSolicitudeDto) {
+  @HttpCode(201)
+  async create(@Body() createSolicitudeDto: CreateSolicitudeDto) {
     return this.solicitudesService.create(createSolicitudeDto);
   }
 
