@@ -16,6 +16,11 @@ import { Tipo } from './enums/tipo.enum';
 const empleado_emisor =  6;
 const coordinador_stock = 8;
 
+const tipos_cs = [Tipo.SOLICITARQR, Tipo.PE_DESFASADAS, Tipo.PE_PENDIENTES, Tipo.ESTATUS_SALIDA];
+
+const tipos_con_whatsapp = [Tipo.SOLICITARQR];
+
+
 @Injectable()
 export class SolicitudesService {
   constructor(
@@ -75,7 +80,9 @@ export class SolicitudesService {
       },
     });
 
-    if (usuarioReceptor?.celular) {
+    const debeEnviarWhatsapp = tipos_con_whatsapp.includes(createSolicitudeDto.tipo);
+    
+    if (debeEnviarWhatsapp && usuarioReceptor?.celular) {
       const mensaje = `Tienes una nueva solicitud pendiente de ${empleadoEmisor.nombre} ${empleadoEmisor.apellido_paterno} para el viaje #${viajeEmbarque.viaje.id}.`;
       void this.whatsappService.enviarMensaje(usuarioReceptor.celular, mensaje);
     }
@@ -84,7 +91,7 @@ export class SolicitudesService {
   }
  
     private resolverIdReceptor(dto: CreateSolicitudeDto): number {
-    if (dto.tipo === Tipo.SOLICITARQR) {
+    if (tipos_cs.includes(dto.tipo)) {
       return coordinador_stock;
     }
 
@@ -95,6 +102,40 @@ export class SolicitudesService {
     return dto.empleado_receptor_id;
   
   }
+
+  async aceptar (id: number) {
+    const solicitud = await this.solicitudRepository.findOne({
+      where: { id },
+      relations: { viaje_embarque: true, empleado_emisor: true, empleado_receptor: true },
+    });
+    if (!solicitud) {
+      throw new AppException('VAL_RECORD_NOT_FOUND', { record: 'Solicitud', id });
+    }
+    if (solicitud.estado !== Estado.PENDIENTE) {
+      throw new AppException('VAL_INVALID_FIELD', { fieldName: 'Solicitud', id, estado: solicitud.estado });
+    }
+
+    solicitud.estado = Estado.ACEPTADO;
+    return this.solicitudRepository.save(solicitud);
+  }
+
+  async rechazar (id: number) {
+    const solicitud = await this.solicitudRepository.findOne({
+      where: { id },
+      relations: { viaje_embarque: true, empleado_emisor: true, empleado_receptor: true },
+    });
+
+    if (!solicitud) {
+      throw new AppException('VAL_RECORD_NOT_FOUND', { record: 'Solicitud', id });
+    }
+    if (solicitud.estado !== Estado.PENDIENTE) {
+      throw new AppException('VAL_INVALID_FIELD', { fieldName: 'Solicitud', id, estado: solicitud.estado });
+    }
+
+    solicitud.estado = Estado.RECHAZADO;
+    return this.solicitudRepository.save(solicitud);
+  }
+
 
   findAll() {
     return `This action returns all solicitudes`;
