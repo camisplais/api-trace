@@ -3,14 +3,14 @@ import { ErrorCatalog, ErrorKey } from './error-catalog';
 import { ErrorResponse } from './error.types';
 
 export class AppException extends HttpException {
-  constructor(errorKey: ErrorKey, params?: Record<string, string>) {
+  constructor(errorKey: ErrorKey, params?: Record<string, string | number>) {
     const error = ErrorCatalog[errorKey];
 
     let message: string = error.userMessage;
 
     if (params) {
       Object.entries(params).forEach(([key, value]) => {
-        message = message.replace(`{${key}}`, value);
+        message = message.replace(`{${key}}`, String(value));
       });
     }
 

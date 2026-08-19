@@ -59,6 +59,7 @@ import { QRModule } from './codigoQR/qr.module';
     ViajeEmbarqueModule,
     SolicitudesModule,
     NotificacionesModule,
+    SolicitudesModule
   ],
   controllers: [AppController],
   providers: [AppService],
