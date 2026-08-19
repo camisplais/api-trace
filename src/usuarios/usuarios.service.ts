@@ -57,9 +57,12 @@ export class UsuariosService {
     if (!password) {
       throw new AppException('VAL_REQUIRED_FIELD', { fieldName: 'password' });
     }
-    if (username.length < 8) {
+
+    // 1. Validar longitud exacta de 8 caracteres
+    if (username.length !== 8) {
       throw new AppException('VAL_USERNAME');
     }
+
     if (password.length < 8) {
       throw new AppException('VAL_PASSWORD_LONG');
     }
@@ -70,6 +73,22 @@ export class UsuariosService {
     const empleado = await this.empleadosRepo.findOneBy({ id: empleadoId });
     if (!empleado) {
       throw new AppException('VAL_RECORD_NOT_FOUND', { record: 'Empleado' });
+    }
+
+    // 2. Construir y validar formato de username (Inicial nombre + apellidos)
+    const limpiarTexto = (texto: string) =>
+      (texto || '')
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-z]/g, '');
+
+    const inicialNombre = limpiarTexto(empleado.nombre).charAt(0);
+    const apellidos = limpiarTexto(empleado.apellido_paterno) + limpiarTexto(empleado.apellido_materno ?? '');
+    const usernameEsperado = (inicialNombre + apellidos.substring(0, 7)).padEnd(8, 'x');
+
+    if (username.toLowerCase() !== usernameEsperado) {
+      throw new AppException('VAL_INVALID_FORMAT', { fieldName: 'username' });
     }
 
     const usernameTomado = await this.usuariosRepo.findOne({
@@ -97,7 +116,6 @@ export class UsuariosService {
     });
     await this.usuariosRepo.save(usuario);
 
-    // recargo con relaciones para devolver la forma completa
     const creado = await this.usuariosRepo.findOne({
       where: { id: usuario.id },
       relations: this.relacionesUsuario,
