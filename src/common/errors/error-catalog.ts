@@ -181,6 +181,14 @@ export const ErrorCatalog = {
     userMessage: 'La nueva contraseña debe ser diferente de la contraseña actual',
   },
 
+  VAL_PHONE: {
+    code: 'VAL_009',
+    status: 400,
+    devMessageEn: 'The phone number must be 10 characters',
+    devMessageEs: 'El telefono debe tener max 10 caracteres',
+    userMessage: 'El telefono debe tener max 10 caracteres',
+  },
+
   TRANS_NOT_AVAILABLE: {
     code: 'TRANS_001',
     status: 409,
