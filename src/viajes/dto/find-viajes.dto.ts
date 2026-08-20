@@ -1,4 +1,4 @@
-import { IsOptional, IsNumberString } from 'class-validator';
+import { IsOptional, IsNumberString, IsDateString } from 'class-validator';
 
 export class FindViajesDto {
   @IsOptional()
@@ -16,4 +16,12 @@ export class FindViajesDto {
   @IsOptional()
   @IsNumberString()
   transporte_id?: string;
+
+  @IsOptional()
+  @IsDateString()
+  fecha_desde?: string;
+  
+  @IsOptional()
+  @IsDateString()
+  fecha_hasta?: string;  
 }
