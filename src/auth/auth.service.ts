@@ -176,10 +176,10 @@ export class AuthService {
     return this.usuariosService.toResponse(usuario);
   }
 
-    //el propio actualiza su propio: username y/o password
+    //el propio actualiza su propio: username y/o celular
   async updateUser(userId: number, username?: string, password?: string) {
       const usuario = await this.usuariosRepo.findOne({
-        where: { id: userId },
+        where: this.usuariosService.relacionesUsuario,
       });
       if (!usuario) {
         throw new AppException('VAL_RECORD_NOT_FOUND', { record: 'Usuario' });
@@ -195,22 +195,46 @@ export class AuthService {
   
         usuario.username = username;
       }
-  
-      if (password !== undefined) {
-        if (password.length < 8) throw new AppException('VAL_PASSWORD_LONG');
-        if (!/^(?=.*[A-Z])(?=.*[^a-zA-Z0-9]).+$/.test(password)) {
-          throw new AppException('VAL_PASSWORD_COMPLEXITY');
-        }
-        usuario.password = await this.hashPassword(password);
-      }
-  
+   
       await this.usuariosRepo.save(usuario);
   
-      return {
-        id: usuario.id,
-        username: usuario.username,
-      };
+      return this.usuariosService.toResponse(usuario);
     }
+
+        //el propio actualiza su propio: contraseña
+  async updateUserPassword(userId: number, password?: string) {
+    const usuario = await this.usuariosRepo.findOne({
+      where: { id: userId },
+      select: {
+      id: true,
+      username: true,
+      password: true,
+      },
+    });
+    if (!usuario) {
+      throw new AppException('VAL_RECORD_NOT_FOUND', { record: 'Usuario' });
+    }
+
+    if (password !== undefined) {
+      if (password.length < 8) throw new AppException('VAL_PASSWORD_LONG');
+      if (!/^(?=.*[A-Z])(?=.*[^a-zA-Z0-9]).+$/.test(password)) {
+        throw new AppException('VAL_PASSWORD_COMPLEXITY');
+      }
+
+      const esIgualALaActual = await bcrypt.compare(password, usuario.password);
+      if (esIgualALaActual) {
+        throw new AppException('VAL_CHANGE_PASSWORD');
+      }
+
+      usuario.password = await this.hashPassword(password);
+    }
+
+    await this.usuariosRepo.save(usuario);
+
+    return {
+      message: 'Contraseña actualizada'
+    };
+  }
 
     async hashPassword(passwordPlano: string): Promise<string> {
         return bcrypt.hash(passwordPlano, 10);

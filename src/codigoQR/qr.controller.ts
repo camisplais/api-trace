@@ -1,4 +1,4 @@
-import { UseGuards,Controller, Get, Req, Res, UnauthorizedException,Param } from '@nestjs/common';
+import { UseGuards,Controller, Get, Post,Body,Req, Res, UnauthorizedException,Param } from '@nestjs/common';
 import type { Request, Response } from 'express';
 import { AuthService } from 'src/auth/auth.service';
 import { QRService } from './qr.service';
@@ -24,5 +24,17 @@ export class QRController
     @UseGuards(SessionGuard)
     async getUltimoCodigo(@CurrentUser() user: {id: string}) {
         return this.qrService.getUltimoCodigo(user.id);
+    }
+
+    @Post('escanear-codigo')
+    @UseGuards(SessionGuard)
+    async escanearCodigo(
+    @CurrentUser() user: {id: string},
+    @Body() body: { qr: string;}
+    ) {
+    return this.qrService.escanearCodigo(
+        user.id,
+        body.qr,
+    );
     }
 }

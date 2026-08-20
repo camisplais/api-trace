@@ -186,6 +186,38 @@ export class UsuariosService {
     return this.toResponse(usuario);
   }
 
+  // admin actualiza password del usuario
+  async updateUserPassword(empleadoId: number, password?: string) {
+    const usuario = await this.usuariosRepo.findOne({
+      where: { empleado: { id: empleadoId } },
+      relations: this.relacionesUsuario,
+    });
+    if (!usuario) {
+      throw new AppException('VAL_RECORD_NOT_FOUND', { record: 'Usuario' });
+    }
+
+    if (password !== undefined) {
+      if (password.length < 8) throw new AppException('VAL_PASSWORD_LONG');
+      if (!/^(?=.*[A-Z])(?=.*[^a-zA-Z0-9]).+$/.test(password)) {
+        throw new AppException('VAL_PASSWORD_COMPLEXITY');
+      }
+
+      const esIgualALaActual = await bcrypt.compare(password, usuario.password);
+      if (esIgualALaActual) {
+        throw new AppException('VAL_CHANGE_PASSWORD');
+      }
+
+      usuario.password = await this.hashPassword(password);
+    }
+
+    await this.usuariosRepo.save(usuario);
+
+    return {
+      message: 'Contraseña actualizada'
+    };
+  }
+
+
   async removeUser(empleadoId: number) {
     const usuario = await this.usuariosRepo.findOne({
       where: { empleado: { id: empleadoId } },

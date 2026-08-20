@@ -9,27 +9,27 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.use(cookieParser());
   app.enableCors({
-    origin: 'http://localhost:5000',
-    credentials: true,
-  });
+  origin: ['http://localhost:5173', 'http://localhost:5000'],
+  credentials: true,
+})
   app.useGlobalPipes(
     new ValidationPipe({
       transform: true,
       whitelist: true,
       forbidNonWhitelisted: true,
       exceptionFactory: (errors: ValidationError[]) => {
-        const primer = errors[0];
-        const constraints = primer.constraints ?? {};
+        const miprimer = errors[0];
+        const constraints = miprimer.constraints ?? {};
         const esRequerido =
           'isNotEmpty' in constraints || 'isDefined' in constraints;
 
         if (esRequerido) {
           return new AppException('VAL_REQUIRED_FIELD', {
-          fieldName: primer.property,
+          fieldName: miprimer.property,
         });
         }
         return new AppException('VAL_INVALID_FIELD', {
-          fieldName: primer.property,
+          fieldName: miprimer.property,
         });
       },
     }),
