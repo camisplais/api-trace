@@ -138,6 +138,17 @@ export class ViajesService {
     const page = Number(query.page) || 1;
     const perPage = Number(query.per_page) || 20;
 
+    // 1. Generar la fecha de hoy en formato local YYYY-MM-DD
+    const ahora = new Date();
+    const anio = ahora.getFullYear();
+    const mes = String(ahora.getMonth() + 1).padStart(2, '0');
+    const dia = String(ahora.getDate()).padStart(2, '0');
+    const hoyStr = `${anio}-${mes}-${dia}`;
+
+    // 2. Tomar fechas de los filtros o usar 'hoy' como valor predeterminado
+    const fechaDesde = query.fecha_desde || hoyStr;
+    const fechaHasta = query.fecha_hasta || hoyStr;
+
     const idQb = this.viajeRepo
       .createQueryBuilder('viaje')
       .leftJoin('viaje.empleado_chofer', 'empleado_chofer')
@@ -156,6 +167,10 @@ export class ViajesService {
       });
     }
 
+    // 3. Filtro por fecha (se aplica siempre: con hoy o con las fechas solicitadas)
+    idQb.andWhere('DATE(viaje.createdAt) >= :fechaDesde', { fechaDesde });
+    idQb.andWhere('DATE(viaje.createdAt) <= :fechaHasta', { fechaHasta });
+
     const total = await idQb.getCount();
 
     const rows = await idQb
@@ -172,6 +187,7 @@ export class ViajesService {
           .leftJoinAndSelect('viaje.empleado_chofer', 'empleado_chofer')
           .leftJoinAndSelect('viaje.empleado_embarque', 'empleado_embarque')
           .leftJoinAndSelect('viaje.transporte', 'transporte')
+          .leftJoinAndSelect('viaje.seguimiento', 'seguimiento')
           .leftJoinAndSelect('viaje.viajeEmbarques', 'viajeEmbarque')
           .leftJoinAndSelect('viajeEmbarque.embarque', 'embarque')
           .where('viaje.id IN (:...ids)', { ids })
@@ -237,6 +253,12 @@ export class ViajesService {
       empleado_embarques: viaje.empleado_embarque,
       transporte_id: viaje.transporte?.id,
       transporte: viaje.transporte,
+      seguimiento: viaje.seguimiento
+        ? {
+            entrada: viaje.seguimiento.entrada,
+            salida: viaje.seguimiento.salida,
+          }
+        : null,
       viaje_embarques: viajeEmbarques.map((ve) => ({
         id: ve.id,
         viaje_id: viaje.id,

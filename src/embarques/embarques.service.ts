@@ -205,56 +205,62 @@ export class EmbarquesService {
   }
 
   async findAllFiltrado(filtros: FiltroEmbarquesDto) {
-    const {page = 1, limit = 5 } = filtros;
+    const { page = 1, limit = 5 } = filtros;
+
+    // 1. Obtener la fecha de hoy en formato YYYY-MM-DD local (evita desfases UTC)
+    const ahora = new Date();
+    const anio = ahora.getFullYear();
+    const mes = String(ahora.getMonth() + 1).padStart(2, '0');
+    const dia = String(ahora.getDate()).padStart(2, '0');
+    const hoyStr = `${anio}-${mes}-${dia}`; // Ejemplo: "2026-08-19"
+
+    // 2. Usar los filtros o la fecha local de hoy
+    const fechaDesde = filtros.fecha_desde ? filtros.fecha_desde : hoyStr;
+    const fechaHasta = filtros.fecha_hasta ? filtros.fecha_hasta : hoyStr;
 
     const query = this.embarqueRepository
       .createQueryBuilder('embarque')
       .leftJoinAndSelect('embarque.cliente', 'cliente')
-      .leftJoinAndSelect('embarque.empleado', 'empleado')
+      .leftJoinAndSelect('embarque.empleado', 'empleado');
 
-      if (filtros.cliente_id) {
-        query.andWhere('cliente.id = :clienteId', {
-          clienteId: filtros.cliente_id
-        })
-      }
+    if (filtros.cliente_id) {
+      query.andWhere('cliente.id = :clienteId', { clienteId: filtros.cliente_id });
+    }
 
-      if (filtros.empleado_id) {
-        query.andWhere('empleado.id = :empleadoId', {
-          empleadoId: filtros.empleado_id,
-        });
-      }
+    if (filtros.empleado_id) {
+      query.andWhere('empleado.id = :empleadoId', { empleadoId: filtros.empleado_id });
+    }
 
-      if (filtros.estado){
-        query.andWhere('embarque.estado = :estado', { estado: filtros.estado });
-      }
+    if (filtros.estado) {
+      query.andWhere('embarque.estado = :estado', { estado: filtros.estado });
+    }
 
-      if (filtros.tipo) {
-        query.andWhere('embarque.tipo = :tipo', { tipo: filtros.tipo });
-      }
-      if (filtros.fecha_desde) {
-        query.andWhere('embarque.fecha >= :fechaDesde', { fechaDesde: filtros.fecha_desde });
-      }
-      if (filtros.fecha_hasta) {
-        query.andWhere('embarque.fecha <= :fechaHasta', { fechaHasta: filtros.fecha_hasta });
-      }
+    if (filtros.tipo) {
+      query.andWhere('embarque.tipo = :tipo', { tipo: filtros.tipo });
+    }
 
-      query
-      .orderBy('embarque.fecha', 'DESC')
+    // 3. Comparación directa por fecha (truncando horas si existen)
+    query.andWhere('DATE(embarque.createdAt) >= :fechaDesde', { fechaDesde });
+    query.andWhere('DATE(embarque.createdAt) <= :fechaHasta', { fechaHasta });
+
+    query
+      .orderBy('embarque.createdAt', 'DESC')
       .skip((page - 1) * limit)
       .take(limit);
 
-      const [data, total] = await query.getManyAndCount();
-
-      return {
-        data,
-        meta: {
-          total,
-          page,
-          limit,
-          totalPages: Math.ceil(total / limit),
-        }
-      };
+    const [data, total] = await query.getManyAndCount();
+    return {
+      data,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
   }
+
+  
     async getDocumentosRequeridos(embarqueId: number) {
     const embarque = await this.embarqueRepository.findOne({
       where: { id: embarqueId },
