@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, HttpCode } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, HttpCode, ParseIntPipe } from '@nestjs/common';
 import { SolicitudesService } from './solicitudes.service';
 import { CreateSolicitudeDto } from './dto/create-solicitude.dto';
 import { UpdateSolicitudeDto } from './dto/update-solicitude.dto';
@@ -26,6 +26,16 @@ export class SolicitudesController {
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateSolicitudeDto: UpdateSolicitudeDto) {
     return this.solicitudesService.update(+id, updateSolicitudeDto);
+  }
+
+  @Patch(':id/aceptar')
+  async aceptar(@Param('id', ParseIntPipe) id: number) {
+    return this.solicitudesService.aceptar(id);
+  }
+
+  @Patch(':id/rechazar')
+  async rechazar(@Param('id', ParseIntPipe) id: number) {
+    return this.solicitudesService.rechazar(id);
   }
 
   @Delete(':id')

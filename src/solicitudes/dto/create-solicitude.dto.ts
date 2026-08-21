@@ -1,4 +1,4 @@
-import { IsEnum, IsInt, IsOptional } from "class-validator";
+import { IsEnum, IsInt, IsNotEmpty, IsOptional, IsString, ValidateIf } from "class-validator";
 import { Tipo } from "../enums/tipo.enum";
 
 export class CreateSolicitudeDto {
@@ -12,4 +12,9 @@ export class CreateSolicitudeDto {
     @IsOptional()
     @IsInt()
     empleado_receptor_id?: number;
+
+    @ValidateIf((dto) => dto.tipo === Tipo.PE_PENDIENTES)
+    @IsString()
+    @IsNotEmpty({message: "El campo motivo es obligatorio para solicitudes de tipo PE_PENDIENTES"})
+    motivo!: string;
 }

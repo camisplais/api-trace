@@ -11,6 +11,10 @@ import { CreatePruebaEntregaEmbarqueDto } from './dto/create-prueba_entrega_emba
 import { UpdatePruebaEntregaEmbarqueDto } from './dto/update-prueba_entrega_embarque.dto';
 import { AppException } from 'src/common/errors/app.exception';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import { ViajeEmbarque } from 'src/viaje_embarque/entities/viaje_embarque.entity';
+import { Solicitude } from 'src/solicitudes/entities/solicitude.entity';
+import { Tipo } from 'src/solicitudes/enums/tipo.enum';
+import { Estado } from 'src/solicitudes/enums/estado.enum';
 
 @Injectable()
 export class PruebaEntregaEmbarqueService {
@@ -25,6 +29,10 @@ export class PruebaEntregaEmbarqueService {
     private readonly embarqueRepo: Repository<Embarque>,
     @InjectRepository(DocCliente)
     private readonly docClienteRepo: Repository<DocCliente>,
+    @InjectRepository(ViajeEmbarque)
+    private readonly viajeEmbarqueRepo: Repository<ViajeEmbarque>,
+    @InjectRepository(Solicitude)
+    private readonly solicitudeRepo: Repository<Solicitude>,
     private readonly configService: ConfigService,
   ) {
     this.s3 = new S3Client({
@@ -107,6 +115,88 @@ export class PruebaEntregaEmbarqueService {
     const timestampCorto = Date.now().toString(36); // base36, corto y único
 
     return `${clienteSlug}${documentoSlug}${yy}${mm}${dd}${timestampCorto}`;
+  }
+
+  async subirPruebaDesfasada(
+    viajeEmbarqueId: number,
+    embarqueId: number,
+    docClienteId: number,
+    file: Express.Multer.File,
+  ) {
+    if (!file) {
+      throw new AppException('FILE_REQUIRED');
+    }
+
+    const viajeEmbarque = await this.viajeEmbarqueRepo.findOne({
+      where: { viaje: { id: viajeEmbarqueId }, embarque: { id: embarqueId } },
+    });
+
+    if (!viajeEmbarque) {
+      throw new AppException('VAL_RECORD_NOT_FOUND', { record: 'ViajeEmbarque' });
+    }
+
+    const solicitudAceptada = await this.solicitudeRepo.findOne({
+      where: {
+        viaje_embarque: { id: viajeEmbarque.id },
+        tipo: Tipo.PE_DESFASADAS,
+        estado: Estado.ACEPTADO,
+      },
+    });
+
+    if (!solicitudAceptada) {
+      throw new AppException('VAL_RECORD_NOT_FOUND', { record: 'Solicitud Aceptada' });
+    }
+
+    const embarque = viajeEmbarque.embarque;
+    const docCliente = await this.docClienteRepo.findOne({
+      where: {
+        id: docClienteId,
+        cliente: { id: embarque.cliente.id },
+      },
+    });
+
+    if (!docCliente) {
+      throw new AppException('VAL_RECORD_NOT_FOUND', { record: 'docCliente_id' });
+    }
+
+    const pruebaExistente = await this.pruebaRepo.findOne({
+      where: {
+        embarque: { id: embarqueId },
+        docCliente: { id: docClienteId },
+      },
+    });
+
+    if (pruebaExistente) {
+      throw new AppException('VAL_RECORD_ALREADY_EXISTS', { record: 'PruebaEntregaEmbarque' });
+    }
+
+    const fecha = new Date();
+    const anio = fecha.getFullYear();
+    const clienteSlug = embarque.cliente.nombre.replace(/\s+/g, '');
+    const nombreArchivo = this.generarNombreArchivo(
+      embarque.cliente.nombre,
+      docCliente.documento.nombre,
+      fecha,
+    );
+    const extension = extname(file.originalname);
+    const key = `pruebas-entrega/${clienteSlug}/${anio}/${nombreArchivo}${extension}`;
+
+    await this.s3.send(
+      new PutObjectCommand({
+        Bucket: this.bucket,
+        Key: key,
+        Body: file.buffer,
+        ContentType: file.mimetype,
+      }),
+    );
+
+    const prueba = this.pruebaRepo.create({
+      embarque: { id: embarqueId },
+      docCliente: { id: docClienteId },
+      ruta_imagen: key,
+    });
+    
+    return this.pruebaRepo.save(prueba);
   }
 
   async findAll() {
