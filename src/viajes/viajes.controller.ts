@@ -25,7 +25,7 @@ export class ViajesController {
 
   //el viaje va en el path y el embrque en el body
    @Post(':id/embarques')
-   //@UseGuards(SessionGuard)
+   @UseGuards(SessionGuard)
   async agregarEmbarque(
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: AgregarEmbarqueDto,
@@ -34,13 +34,13 @@ export class ViajesController {
   }
 
   @Get()
-  //@UseGuards(SessionGuard)
+  @UseGuards(SessionGuard)
   findAll(@Query() query: FindViajesDto) {
     return this.viajesService.findAll(query);
   }
 
   @Get(':id')
-  //@UseGuards(SessionGuard)
+  @UseGuards(SessionGuard)
   findOne(@Param('id', ParseIntPipe) id: number) {
     return this.viajesService.findOne(id);
   }

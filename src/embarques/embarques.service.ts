@@ -203,25 +203,30 @@ export class EmbarquesService {
       });
     });
   }
-
+  
   async findAllFiltrado(filtros: FiltroEmbarquesDto) {
     const { page = 1, limit = 5 } = filtros;
 
-    // 1. Obtener la fecha de hoy en formato YYYY-MM-DD local (evita desfases UTC)
     const ahora = new Date();
     const anio = ahora.getFullYear();
     const mes = String(ahora.getMonth() + 1).padStart(2, '0');
     const dia = String(ahora.getDate()).padStart(2, '0');
-    const hoyStr = `${anio}-${mes}-${dia}`; // Ejemplo: "2026-08-19"
+    const hoyStr = `${anio}-${mes}-${dia}`;
 
-    // 2. Usar los filtros o la fecha local de hoy
     const fechaDesde = filtros.fecha_desde ? filtros.fecha_desde : hoyStr;
     const fechaHasta = filtros.fecha_hasta ? filtros.fecha_hasta : hoyStr;
 
     const query = this.embarqueRepository
       .createQueryBuilder('embarque')
       .leftJoinAndSelect('embarque.cliente', 'cliente')
-      .leftJoinAndSelect('embarque.empleado', 'empleado');
+      .leftJoinAndSelect('embarque.empleado', 'empleado')
+      .addSelect((subQuery) => {
+        return subQuery
+          .select('ve.viaje_id', 'viaje_id')   // 👈 ahora sí selecciona el ID real, no un conteo
+          .from('viaje_embarque', 've')
+          .where('ve.embarque_id = embarque.id')
+          .limit(1);
+      }, 'viaje_id_asignado');
 
     if (filtros.cliente_id) {
       query.andWhere('cliente.id = :clienteId', { clienteId: filtros.cliente_id });
@@ -240,12 +245,11 @@ export class EmbarquesService {
     }
 
     if (filtros.sin_viaje) {
-    query
-      .leftJoin('viaje_embarque', 've', 've.embarque_id = embarque.id')
-      .andWhere('ve.id IS NULL');
+      query
+        .leftJoin('viaje_embarque', 've_filtro', 've_filtro.embarque_id = embarque.id')
+        .andWhere('ve_filtro.id IS NULL');
     }
 
-    // 3. Comparación directa por fecha (truncando horas si existen)
     query.andWhere('DATE(embarque.createdAt) >= :fechaDesde', { fechaDesde });
     query.andWhere('DATE(embarque.createdAt) <= :fechaHasta', { fechaHasta });
 
@@ -254,7 +258,14 @@ export class EmbarquesService {
       .skip((page - 1) * limit)
       .take(limit);
 
-    const [data, total] = await query.getManyAndCount();
+    const total = await query.getCount();
+    const { entities, raw } = await query.getRawAndEntities();
+
+    const data = entities.map((embarque, i) => ({
+      ...embarque,
+      viaje_id: raw[i]?.viaje_id_asignado ? Number(raw[i].viaje_id_asignado) : null,
+    }));
+
     return {
       data,
       meta: {
@@ -266,8 +277,7 @@ export class EmbarquesService {
     };
   }
 
-  
-    async getDocumentosRequeridos(embarqueId: number) {
+  async getDocumentosRequeridos(embarqueId: number) {
     const embarque = await this.embarqueRepository.findOne({
       where: { id: embarqueId },
     });
