@@ -239,6 +239,12 @@ export class EmbarquesService {
       query.andWhere('embarque.tipo = :tipo', { tipo: filtros.tipo });
     }
 
+    if (filtros.sin_viaje) {
+    query
+      .leftJoin('viaje_embarque', 've', 've.embarque_id = embarque.id')
+      .andWhere('ve.id IS NULL');
+    }
+
     // 3. Comparación directa por fecha (truncando horas si existen)
     query.andWhere('DATE(embarque.createdAt) >= :fechaDesde', { fechaDesde });
     query.andWhere('DATE(embarque.createdAt) <= :fechaHasta', { fechaHasta });

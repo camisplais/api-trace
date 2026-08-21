@@ -1,5 +1,5 @@
 import { Type } from "class-transformer";
-import { IsDateString, IsEnum, IsInt, IsOptional } from "class-validator";
+import { IsDateString, IsEnum, IsInt, IsOptional, IsBoolean } from "class-validator";
 import { Tipo } from "../enums/tipo.enum";
 import { Estado } from "../enums/estado.enum";
 
@@ -40,4 +40,9 @@ export class FiltroEmbarquesDto {
     @Type(()=>Number)
     @IsInt()
     limit?: number = 5;
+
+  @IsOptional()
+  @Type(() => Boolean)
+  @IsBoolean()
+  sin_viaje?: boolean;
 }

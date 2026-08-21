@@ -37,8 +37,9 @@ export class ViajesService {
 
   ) {}
   
-    async crearViaje(dto: CrearViajeDto)
+    async crearViaje(dto: CrearViajeDto, userId:number | string)
     {
+      const empleadoEmbarqueId = Number(userId);
       // 1. Validar transporte existe y está disponible
       const transporte = await this.transporteRepo.findOne({
         where: { id: dto.transporte_id },
@@ -80,7 +81,7 @@ export class ViajesService {
       return this.dataSource.transaction(async (manager) => {
         const viaje = manager.create(Viaje, {
           empleado_chofer: { id: dto.empleado_chofer_id },
-          empleado_embarque: { id: dto.empleado_embarque_id },
+          empleado_embarque: { id: empleadoEmbarqueId },
           transporte: { id: dto.transporte_id },
         });
         const viajeGuardado = await manager.save(viaje);
@@ -136,50 +137,43 @@ export class ViajesService {
 
   async findAll(query: FindViajesDto) {
     const page = Number(query.page) || 1;
-    const perPage = Number(query.per_page) || 20;
+    const perPage = Number(query.per_page) || 5;
 
-    // 1. Generar la fecha de hoy en formato local YYYY-MM-DD
     const ahora = new Date();
     const anio = ahora.getFullYear();
     const mes = String(ahora.getMonth() + 1).padStart(2, '0');
     const dia = String(ahora.getDate()).padStart(2, '0');
     const hoyStr = `${anio}-${mes}-${dia}`;
 
-    // 2. Tomar fechas de los filtros o usar 'hoy' como valor predeterminado
     const fechaDesde = query.fecha_desde || hoyStr;
     const fechaHasta = query.fecha_hasta || hoyStr;
 
     const idQb = this.viajeRepo
       .createQueryBuilder('viaje')
       .leftJoin('viaje.empleado_chofer', 'empleado_chofer')
-      .leftJoin('viaje.transporte', 'transporte')
-      .select('viaje.id', 'id');
+      .leftJoin('viaje.transporte', 'transporte');
 
     if (query.empleado_chofer_id) {
       idQb.andWhere('empleado_chofer.id = :choferId', {
         choferId: Number(query.empleado_chofer_id),
       });
     }
-
     if (query.transporte_id) {
       idQb.andWhere('transporte.id = :transporteId', {
         transporteId: Number(query.transporte_id),
       });
     }
-
-    // 3. Filtro por fecha (se aplica siempre: con hoy o con las fechas solicitadas)
     idQb.andWhere('DATE(viaje.createdAt) >= :fechaDesde', { fechaDesde });
     idQb.andWhere('DATE(viaje.createdAt) <= :fechaHasta', { fechaHasta });
 
-    const total = await idQb.getCount();
-
-    const rows = await idQb
+    // Una sola llamada: cuenta y pagina al mismo tiempo, igual que en Embarques
+    const [viajesBase, total] = await idQb
       .orderBy('viaje.id', 'DESC')
       .skip((page - 1) * perPage)
       .take(perPage)
-      .getRawMany();
+      .getManyAndCount();
 
-    const ids = rows.map((row) => row.id);
+    const ids = viajesBase.map((v) => v.id);
 
     const viajes = ids.length
       ? await this.viajeRepo
