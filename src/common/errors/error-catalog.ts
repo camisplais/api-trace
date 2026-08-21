@@ -173,6 +173,14 @@ export const ErrorCatalog = {
     userMessage: '{fieldName} tiene un valor inválido',
   },
 
+  VAL_RECORD_ALREADY_EXISTS: {
+    code: 'VAL_009',
+    status: 409,
+    devMessageEn: '{record} already exists',
+    devMessageEs: '{record} ya existe',
+    userMessage: '{record} ya existe',
+  },
+
   VAL_CHANGE_PASSWORD: {
     code: 'VAL_008',
     status: 400,

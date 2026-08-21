@@ -5,10 +5,15 @@ import { PruebaEntregaEmbarqueController } from './prueba_entrega_embarque.contr
 import { PruebaEntregaEmbarque } from './entities/prueba_entrega_embarque.entity';
 import { Embarque } from 'src/embarques/entities/embarque.entity';
 import { DocCliente } from 'src/doc_cliente/entities/doc_cliente.entity';
+import { ViajeEmbarque } from 'src/viaje_embarque/entities/viaje_embarque.entity';
+import { Solicitude } from 'src/solicitudes/entities/solicitude.entity';
+import { PruebaEntregaEmbarqueViajeController } from './prueba_entrega_embarque_viaje.controller';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([PruebaEntregaEmbarque, Embarque, DocCliente])],
-  controllers: [PruebaEntregaEmbarqueController],
+  imports: [TypeOrmModule.forFeature([PruebaEntregaEmbarque, Embarque, DocCliente, ViajeEmbarque, Solicitude])],
+  controllers: [PruebaEntregaEmbarqueController,
+    PruebaEntregaEmbarqueViajeController
+  ],
   providers: [PruebaEntregaEmbarqueService],
 })
 export class PruebaEntregaEmbarqueModule {}

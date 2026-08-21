@@ -52,7 +52,7 @@ export class PruebaEntregaEmbarqueController {
   async findByEmbarque(@Param('embarqueId', ParseIntPipe) embarqueId: number) {
     return this.pruebaEntregaEmbarqueService.findByEmbarque(embarqueId);
   }
-
+  
   @Get()
   findAll() {
     return this.pruebaEntregaEmbarqueService.findAll();
