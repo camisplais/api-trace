@@ -16,9 +16,11 @@ export class ViajesController {
   ) {}
 
   @Post()
-  //@UseGuards(SessionGuard)
-  async crearViaje(@Body() dto: CrearViajeDto) {
-    return this.viajesService.crearViaje(dto);
+  @UseGuards(SessionGuard)
+  async crearViaje(@Body() dto: CrearViajeDto,
+    @CurrentUser() user : {id:string },
+  ) {
+    return this.viajesService.crearViaje(dto,user.id);
   }
 
   //el viaje va en el path y el embrque en el body
