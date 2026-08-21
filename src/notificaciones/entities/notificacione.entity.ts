@@ -1,5 +1,6 @@
 import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, DeleteDateColumn, ManyToOne,OneToOne,OneToMany,JoinColumn } from 'typeorm';
 import { Solicitude } from 'src/solicitudes/entities/solicitude.entity';
+import { Estado } from '../enums/estado.enum';
 
 @Entity('notificaciones')
 
@@ -14,6 +15,9 @@ export class Notificacion
     
     @Column({ type: 'varchar', length:30})
     notificacion!: string;
+
+    @Column({ type: 'enum', enum: Estado, default: Estado.NO_LEIDA })
+    estado!: Estado;
 
     @CreateDateColumn()
     createdAt!: Date;
