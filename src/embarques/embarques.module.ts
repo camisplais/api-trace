@@ -6,9 +6,12 @@ import { Embarque } from './entities/embarque.entity';
 import { Cliente } from 'src/clientes/entities/cliente.entity';
 import { Empleado } from 'src/empleados/entities/empleado.entity';
 import { DocCliente } from 'src/doc_cliente/entities/doc_cliente.entity';
+import { AuthModule } from 'src/auth/auth.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Embarque, Cliente, Empleado, DocCliente])],
+  imports: [TypeOrmModule.forFeature([Embarque, Cliente, Empleado, DocCliente]),
+    AuthModule
+  ],
   controllers: [EmbarquesController],
   providers: [EmbarquesService],
 })

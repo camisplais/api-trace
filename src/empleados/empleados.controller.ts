@@ -1,16 +1,19 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UploadedFile, UseInterceptors } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { EmpleadosService } from './empleados.service';
 import { CreateEmpleadoDto } from './dto/create-empleado.dto';
 import { UpdateEmpleadoDto } from './dto/update-empleado.dto';
 import { FindEmpleadosDto } from './dto/find-empleados.dto';
+
 
 @Controller('empleados')
 export class EmpleadosController {
   constructor(private readonly empleadosService: EmpleadosService) {}
 
   @Post()
-  create(@Body() createEmpleadoDto: CreateEmpleadoDto) {
-    return this.empleadosService.create(createEmpleadoDto);
+  @UseInterceptors(FileInterceptor('file'))
+  importar(@UploadedFile() file: Express.Multer.File) {
+    return this.empleadosService.importarArchivo(file);
   }
 
   @Get()

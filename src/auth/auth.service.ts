@@ -4,6 +4,11 @@ import { Repository } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
 import * as crypto from 'crypto';
 import { Sesion } from './entities/sesion.entity';
+import { Usuario } from 'src/usuarios/entities/usuario.entity';
+import { AppException } from 'src/common/errors/app.exception';
+import { Not } from 'typeorm';
+import * as bcrypt from 'bcrypt';
+import { UsuariosService } from 'src/usuarios/usuarios.service';
 
 @Injectable()
 export class AuthService {
@@ -11,6 +16,10 @@ export class AuthService {
     @InjectRepository(Sesion)
     private readonly sesionRepo: Repository<Sesion>,
     private readonly config: ConfigService,
+
+    @InjectRepository(Usuario)
+      private readonly usuariosRepo: Repository<Usuario>,
+      private readonly usuariosService: UsuariosService,
   ) {}
 
   // --- PKCE: genera el verifier y su challenge ---
@@ -155,4 +164,80 @@ export class AuthService {
       },
     );
   }
+
+  async getInfoUsuario(userId: string) {
+    const usuario = await this.usuariosRepo.findOne({
+      where: { id: Number(userId) },
+      relations: this.usuariosService.relacionesUsuario,
+    });
+
+    if (!usuario) return null;
+
+    return this.usuariosService.toResponse(usuario);
+  }
+
+    //el propio actualiza su propio: username y/o celular
+  async updateUser(userId: number, username?: string, password?: string) {
+      const usuario = await this.usuariosRepo.findOne({
+        where: this.usuariosService.relacionesUsuario,
+      });
+      if (!usuario) {
+        throw new AppException('VAL_RECORD_NOT_FOUND', { record: 'Usuario' });
+      }
+  
+      if (username !== undefined) {
+        if (username.length < 8) throw new AppException('VAL_USERNAME');
+  
+        const tomado = await this.usuariosRepo.findOne({
+          where: { username, id: Not(usuario.id) },
+        });
+        if (tomado) throw new AppException('VAL_DUPLICATE_FIELD', { fieldName: 'username' });
+  
+        usuario.username = username;
+      }
+   
+      await this.usuariosRepo.save(usuario);
+  
+      return this.usuariosService.toResponse(usuario);
+    }
+
+        //el propio actualiza su propio: contraseña
+  async updateUserPassword(userId: number, password?: string) {
+    const usuario = await this.usuariosRepo.findOne({
+      where: { id: userId },
+      select: {
+      id: true,
+      username: true,
+      password: true,
+      },
+    });
+    if (!usuario) {
+      throw new AppException('VAL_RECORD_NOT_FOUND', { record: 'Usuario' });
+    }
+
+    if (password !== undefined) {
+      if (password.length < 8) throw new AppException('VAL_PASSWORD_LONG');
+      if (!/^(?=.*[A-Z])(?=.*[^a-zA-Z0-9]).+$/.test(password)) {
+        throw new AppException('VAL_PASSWORD_COMPLEXITY');
+      }
+
+      const esIgualALaActual = await bcrypt.compare(password, usuario.password);
+      if (esIgualALaActual) {
+        throw new AppException('VAL_CHANGE_PASSWORD');
+      }
+
+      usuario.password = await this.hashPassword(password);
+    }
+
+    await this.usuariosRepo.save(usuario);
+
+    return {
+      message: 'Contraseña actualizada'
+    };
+  }
+
+    async hashPassword(passwordPlano: string): Promise<string> {
+        return bcrypt.hash(passwordPlano, 10);
+    }
+
 }

@@ -1,13 +1,16 @@
-import { Controller, Get, Post, Query, Req, Res } from '@nestjs/common';
+import { UseGuards,Controller, Get, Post, Query, Req, Res,NotFoundException } from '@nestjs/common';
 import type { Request, Response } from 'express';
 import { ConfigService } from '@nestjs/config';
 import { AuthService } from './auth.service';
+import { SessionGuard } from '../auth/session.guard';
+import { CurrentUser } from '../auth/current-user.decorator';
 
 @Controller('auth')
 export class AuthController {
   constructor(
     private readonly authService: AuthService,
     private readonly config: ConfigService,
+    
   ) {}
 
   // --- Inicia el login: arma PKCE y redirige al IdP ---
@@ -73,20 +76,16 @@ export class AuthController {
     }
   }
 
-  // --- Dice quién está logueado ---
   @Get('me')
-  async me(@Req() req: Request, @Res() res: Response) {
-    const sessionId = req.cookies?.sid;
-    const sesion = await this.authService.obtenerSesion(sessionId);
-
-    if (!sesion) {
-      return res.status(401).json({ error: 'no autenticado' });
+  @UseGuards(SessionGuard)
+  async me(@CurrentUser() user: { id: string }) {
+    const info = await this.authService.getInfoUsuario(user.id);
+    if (!info) {
+      throw new NotFoundException('Usuario no encontrado');
     }
-
-    return res.json({ userId: sesion.userId });
+    return info;
   }
-
-  // --- Cierra sesión ---
+  
   @Post('logout')
   async logout(@Req() req: Request, @Res() res: Response) {
     const sessionId = req.cookies?.sid;

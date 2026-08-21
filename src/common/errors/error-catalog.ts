@@ -181,6 +181,21 @@ export const ErrorCatalog = {
     userMessage: 'La nueva contraseña debe ser diferente de la contraseña actual',
   },
 
+  VAL_PHONE: {
+    code: 'VAL_009',
+    status: 400,
+    devMessageEn: 'The phone number must be 10 characters',
+    devMessageEs: 'El telefono debe tener max 10 caracteres',
+    userMessage: 'El telefono debe tener max 10 caracteres',
+  },
+  VAL_INVALID_FORMAT: {
+    code: 'VAL_010',
+    status: 400,
+    devMessageEn: 'The field {fieldName} does not match the required format',
+    devMessageEs: 'El campo {fieldName} no cumple con el formato requerido',
+    userMessage: 'El formato del campo {fieldName} no es valido',
+  },
+
   TRANS_NOT_AVAILABLE: {
     code: 'TRANS_001',
     status: 409,
