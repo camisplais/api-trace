@@ -2,7 +2,12 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ConfigService } from '@nestjs/config';
 import { Repository } from 'typeorm';
-import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
+import {
+  S3Client,
+  PutObjectCommand,
+  GetObjectCommand,
+} from '@aws-sdk/client-s3';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { extname } from 'path';
 import { Transporte, Estado } from './entities/transporte.entity';
 import { CreateTransporteDto } from './dto/create-transporte.dto';
@@ -58,7 +63,7 @@ export class TransportesService {
     });
 
     const guardado = await this.transporteRepo.save(transporte);
-    return this.formatear(guardado);
+    return await this.formatear(guardado);
   }
 
   async findAll(query: FindTransportesDto) {
@@ -70,7 +75,8 @@ export class TransportesService {
 
     qb.orderBy('transporte.id', 'DESC');
 
-    return qb.getMany();
+    const transportes = await qb.getMany();
+    return Promise.all(transportes.map((t) => this.formatear(t)));
   }
 
   async findEnPlanta() {
@@ -95,7 +101,7 @@ export class TransportesService {
     if (!transporte) {
       throw new AppException('VAL_RECORD_NOT_FOUND', { record: 'Transporte' });
     }
-    return this.formatear(transporte);
+    return await this.formatear(transporte);
   }
 
   async update(
@@ -126,7 +132,7 @@ export class TransportesService {
     }
 
     const guardado = await this.transporteRepo.save(transporte);
-    return this.formatear(guardado);
+    return await this.formatear(guardado);
   }
 
   async remove(id: number) {
@@ -159,14 +165,27 @@ export class TransportesService {
     return key;
   }
 
-  private formatear(transporte: Transporte) {
+  private async formatear(transporte: Transporte) {
     return {
       id: transporte.id,
       marca: transporte.marca,
       placas: transporte.placas,
       carga_util: transporte.carga_util,
-      imagen: transporte.imagen ?? null,
+      imagen: await this.urlImagen(transporte.imagen),
       estado: transporte.estado,
     };
+  }
+
+  /**
+   * Convierte la clave de S3 en una URL prefirmada (temporal) para que el
+   * navegador pueda mostrar la imagen sin abrir el bucket al público.
+   */
+  private async urlImagen(key?: string | null): Promise<string | null> {
+    if (!key) return null;
+    return getSignedUrl(
+      this.s3,
+      new GetObjectCommand({ Bucket: this.bucket, Key: key }),
+      { expiresIn: 3600 }, // 1 hora
+    );
   }
 }
