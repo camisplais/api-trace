@@ -8,9 +8,9 @@ import { FindEmpleadosDto } from './dto/find-empleados.dto';
 import { AuthService } from 'src/auth/auth.service';
 import { SessionGuard } from 'src/auth/session.guard';
 import { CurrentUser } from 'src/auth/current-user.decorator';
+import { AppException } from 'src/common/errors/app.exception';
 
 const DIEZ_MB = 10 * 1024 * 1024;
-import { AppException } from 'src/common/errors/app.exception';
 
 // Foto del empleado: JPG o PNG, max 5MB (mismo criterio que transportes).
 const TIPOS_IMAGEN_PERMITIDOS = ['image/jpeg', 'image/png'];
