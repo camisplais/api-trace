@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Param, ParseIntPipe, UploadedFile, UseInterceptors } from '@nestjs/common';
+import { Controller, Post, Body, Param, ParseIntPipe, UploadedFile, UseInterceptors, Get } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { PruebaEntregaEmbarqueService } from './prueba_entrega_embarque.service';
 
@@ -20,5 +20,10 @@ export class PruebaEntregaEmbarqueViajeController {
       docClienteId,
       file,
     );
+  }
+
+  @Get(':viajeId/embarques-pendientes')
+  async findEmbarquesPendientes(@Param('viajeId', ParseIntPipe) viajeId: number) {
+  return this.pruebaEntregaEmbarqueService.findEmbarquesPendientesPorViaje(viajeId);
   }
 }

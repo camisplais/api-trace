@@ -250,6 +250,70 @@ export class PruebaEntregaEmbarqueService {
     };
   }
 
+  async findEmbarquesPendientesPorViaje(viajeId: number) {
+    const viajeEmbarques = await this.viajeEmbarqueRepo.find({
+      where: { viaje: { id: viajeId } },
+      relations: { embarque: true },
+    });
+    if (viajeEmbarques.length === 0) {
+      return [];
+    }
+
+    const resultado = await Promise.all(
+      viajeEmbarques.map(async (ve) => {
+        const embarque = ve.embarque;
+
+        const totalRequeridos = await this.docClienteRepo.count({
+          where: { cliente: { id: embarque.cliente.id } },
+        });
+
+        const totalSubidos = await this.pruebaRepo.count({
+          where: { embarque: { id: embarque.id } },
+        });
+
+        return {
+          viaje_embarque_id: ve.id,
+          embarque,
+          total_requeridos: totalRequeridos,
+          total_subidos: totalSubidos,
+          pendientes: totalSubidos < totalRequeridos,
+        };
+      }),
+    );
+
+    return resultado.filter((item) => item.pendientes);
+  }
+
+  async findEmbarquesPendientesGlobal() {
+    const embarques = await this.embarqueRepo.find({
+      relations: { cliente: true },
+    });
+
+    if (embarques.length === 0) {
+      return [];
+    }
+
+    const resultado = await Promise.all(
+      embarques.map(async (embarque) => {
+        const totalRequeridos = await this.docClienteRepo.count({
+          where: { cliente: { id: embarque.cliente.id } },
+        });
+        const totalSubidos = await this.pruebaRepo.count({
+          where: { embarque: { id: embarque.id } },
+        });
+
+        return {
+          embarque,
+          total_requeridos: totalRequeridos,
+          total_subidos: totalSubidos,
+          pendientes: totalSubidos < totalRequeridos,
+        };
+      }),
+    );
+
+    return resultado.filter((item) => item.pendientes);
+  }
+  
   update(id: number, updatePruebaEntregaEmbarqueDto: UpdatePruebaEntregaEmbarqueDto) {
     return `This action updates a #${id} pruebaEntregaEmbarque`;
   }

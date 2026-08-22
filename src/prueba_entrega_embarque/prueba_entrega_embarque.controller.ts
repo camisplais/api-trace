@@ -48,6 +48,11 @@ export class PruebaEntregaEmbarqueController {
     );
   }
 
+  @Get('pendientes') 
+  findEmbarquesPendientesGlobal() {
+    return this.pruebaEntregaEmbarqueService.findEmbarquesPendientesGlobal();
+  }
+
   @Get('embarque/:embarqueId')
   async findByEmbarque(@Param('embarqueId', ParseIntPipe) embarqueId: number) {
     return this.pruebaEntregaEmbarqueService.findByEmbarque(embarqueId);
