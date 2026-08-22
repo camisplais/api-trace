@@ -250,6 +250,106 @@ export class PruebaEntregaEmbarqueService {
     };
   }
 
+  async findEmbarquesPendientesPorViaje(viajeId: number) {
+    const viajeEmbarques = await this.viajeEmbarqueRepo.find({
+      where: { viaje: { id: viajeId } },
+      relations: { embarque: true },
+    });
+    if (viajeEmbarques.length === 0) {
+      return [];
+    }
+
+    const resultado = await Promise.all(
+      viajeEmbarques.map(async (ve) => {
+        const embarque = ve.embarque;
+
+        const totalRequeridos = await this.docClienteRepo.count({
+          where: { cliente: { id: embarque.cliente.id } },
+        });
+
+        const totalSubidos = await this.pruebaRepo.count({
+          where: { embarque: { id: embarque.id } },
+        });
+
+        return {
+          viaje_embarque_id: ve.id,
+          embarque,
+          total_requeridos: totalRequeridos,
+          total_subidos: totalSubidos,
+          pendientes: totalSubidos < totalRequeridos,
+        };
+      }),
+    );
+
+    return resultado.filter((item) => item.pendientes);
+  }
+
+  async findEmbarquesPendientesGlobal() {
+    const embarques = await this.embarqueRepo.find({
+      relations: { cliente: true },
+    });
+
+    if (embarques.length === 0) {
+      return [];
+    }
+
+    const resultado = await Promise.all(
+      embarques.map(async (embarque) => {
+        const totalRequeridos = await this.docClienteRepo.count({
+          where: { cliente: { id: embarque.cliente.id } },
+        });
+        const totalSubidos = await this.pruebaRepo.count({
+          where: { embarque: { id: embarque.id } },
+        });
+
+        return {
+          embarque,
+          total_requeridos: totalRequeridos,
+          total_subidos: totalSubidos,
+          pendientes: totalSubidos < totalRequeridos,
+        };
+      }),
+    );
+
+    return resultado.filter((item) => item.pendientes);
+  }
+
+  async findDocsFaltantesPorEmbarque(embarqueId: number) {
+    const embarque = await this.embarqueRepo.findOne({
+      where: { id: embarqueId },
+      relations: { cliente: true },
+    });
+    if (!embarque) {
+      throw new AppException('VAL_RECORD_NOT_FOUND', { record: 'Embarque' });
+    }
+
+    const docsRequeridos = await this.docClienteRepo.find({
+      where: { cliente: { id: embarque.cliente.id } },
+      relations: { documento: true },
+    });
+
+    const docsSubidos = await this.pruebaRepo.find({
+      where: { embarque: { id: embarqueId } },
+      relations: { docCliente: { documento: true } },
+    });
+
+    const idsSubidos = new Set(docsSubidos.map((doc) => doc.docCliente.id));
+
+    const docsFaltantes = docsRequeridos.filter((doc) => !idsSubidos.has(doc.id)).map((doc) => ({
+      doc_cliente_id: doc.id,
+      documento_nombre: doc.documento.nombre,
+    }));
+
+    return {
+      embarque_id: embarque.id,
+      cliente_nombre: embarque.cliente.nombre,
+      total_requeridos: docsRequeridos.length,
+      total_subidos: docsSubidos.length,
+      docsFaltantes,
+    };
+  }
+
+  
   update(id: number, updatePruebaEntregaEmbarqueDto: UpdatePruebaEntregaEmbarqueDto) {
     return `This action updates a #${id} pruebaEntregaEmbarque`;
   }
