@@ -46,6 +46,12 @@ export class EmbarquesController {
     return this.embarquesService.getDocumentosRequeridos(id);
   }
 
+  @Get(':id/seguimiento')
+  //@UseGuards(SessionGuard)
+  async getSeguimiento(@Param('id', ParseIntPipe) id: number) {
+    return this.embarquesService.getSeguimiento(id);
+  }
+
   @Get()
   //@UseGuards(SessionGuard)
   async findAll(@Query() filtros: FiltroEmbarquesDto) {
