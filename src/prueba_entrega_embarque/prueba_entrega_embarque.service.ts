@@ -313,6 +313,42 @@ export class PruebaEntregaEmbarqueService {
 
     return resultado.filter((item) => item.pendientes);
   }
+
+  async findDocsFaltantesPorEmbarque(embarqueId: number) {
+    const embarque = await this.embarqueRepo.findOne({
+      where: { id: embarqueId },
+      relations: { cliente: true },
+    });
+    if (!embarque) {
+      throw new AppException('VAL_RECORD_NOT_FOUND', { record: 'Embarque' });
+    }
+
+    const docsRequeridos = await this.docClienteRepo.find({
+      where: { cliente: { id: embarque.cliente.id } },
+      relations: { documento: true },
+    });
+
+    const docsSubidos = await this.pruebaRepo.find({
+      where: { embarque: { id: embarqueId } },
+      relations: { docCliente: { documento: true } },
+    });
+
+    const idsSubidos = new Set(docsSubidos.map((doc) => doc.docCliente.id));
+
+    const docsFaltantes = docsRequeridos.filter((doc) => !idsSubidos.has(doc.id)).map((doc) => ({
+      doc_cliente_id: doc.id,
+      documento_nombre: doc.documento.nombre,
+    }));
+
+    return {
+      embarque_id: embarque.id,
+      cliente_nombre: embarque.cliente.nombre,
+      total_requeridos: docsRequeridos.length,
+      total_subidos: docsSubidos.length,
+      docsFaltantes,
+    };
+  }
+
   
   update(id: number, updatePruebaEntregaEmbarqueDto: UpdatePruebaEntregaEmbarqueDto) {
     return `This action updates a #${id} pruebaEntregaEmbarque`;

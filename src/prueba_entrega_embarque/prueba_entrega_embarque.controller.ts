@@ -63,6 +63,11 @@ export class PruebaEntregaEmbarqueController {
     return this.pruebaEntregaEmbarqueService.findAll();
   }
 
+  @Get('embarque/:embarqueId/faltantes')
+async findDocumentosFaltantes(@Param('embarqueId', ParseIntPipe) embarqueId: number) {
+  return this.pruebaEntregaEmbarqueService.findDocsFaltantesPorEmbarque(embarqueId);
+}
+
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.pruebaEntregaEmbarqueService.findOne(+id);
