@@ -391,14 +391,16 @@ export class EmpleadosService {
     };
   }
 
-  async findChoferes() 
-  {
-    const empleados = await this.empleadoRepo
-    .createQueryBuilder('empleado')
-    .where('LOWER(empleado.puesto) LIKE :puesto', { puesto: '%chofer%' })
-    .andWhere('empleado.estado = :estado', { estado: Estado.DISPONIBLE })
-    .orderBy('empleado.nombre', 'ASC')
-    .getMany();
+  async findChoferes(soloDisponibles = false) {
+    const qb = this.empleadoRepo
+      .createQueryBuilder('empleado')
+      .where('LOWER(empleado.puesto) LIKE :puesto', { puesto: '%chofer%' });
+
+    if (soloDisponibles) {
+      qb.andWhere('empleado.estado = :estado', { estado: Estado.DISPONIBLE });
+    }
+
+    const empleados = await qb.orderBy('empleado.nombre', 'ASC').getMany();
 
     return {
       data: empleados.map((empleado) => ({

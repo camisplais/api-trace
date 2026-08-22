@@ -241,6 +241,7 @@ export class ViajesService {
 
     return {
       id: viaje.id,
+      createdAt: viaje.createdAt,
       empleado_chofer_id: viaje.empleado_chofer?.id,
       empleado_chofer: viaje.empleado_chofer,
       empleado_embarques_id: viaje.empleado_embarque?.id,
