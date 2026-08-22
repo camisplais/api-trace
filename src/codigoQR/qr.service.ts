@@ -7,6 +7,7 @@ import { Viaje } from 'src/viajes/entities/viaje.entity';
 import { Usuario } from 'src/usuarios/entities/usuario.entity';
 import { SeguimientoViaje } from 'src/seguimiento_viaje/entities/seguimiento_viaje.entity';
 import { Transporte, Estado } from 'src/transportes/entities/transporte.entity';
+import { AppException } from 'src/common/errors/app.exception';
 
 @Injectable()
 export class QRService {
@@ -31,7 +32,7 @@ export class QRService {
     // 1. Validar que el viaje exista
     const viaje = await this.viajeRepo.findOneBy({ id: viajeId });
     if (!viaje) {
-      throw new NotFoundException('Viaje no encontrado');
+      throw new AppException('VAL_RECORD_NOT_FOUND', { record: 'Viaje' });
     }
 
     const codigoQr = uuidv4();
@@ -64,17 +65,18 @@ export class QRService {
     });
 
     if (!usuario || !usuario.empleado) {
-        throw new NotFoundException('No se encontró empleado para este usuario');
+        throw new AppException('VAL_RECORD_NOT_FOUND', { record: 'Usuario' });
     }
 
     // 2. Buscar el último viaje donde es chofer
     const viaje = await this.viajeRepo.findOne({
         where: { empleado_chofer: { id: usuario.empleado.id } },
+        relations: { transporte: true }, 
         order: { createdAt: 'DESC' },
     });
 
     if (!viaje) {
-        throw new NotFoundException('No se encontró ningún viaje para este chofer');
+        throw new AppException('VAL_RECORD_NOT_FOUND', { record: 'Viaje' });
     }
 
     // 3. Buscar el seguimiento de ese viaje
@@ -83,11 +85,19 @@ export class QRService {
     });
 
     if (!seguimiento) {
-        throw new NotFoundException('Este viaje no tiene seguimiento/QR generado');
+        throw new AppException('VAL_RECORD_NOT_FOUND', { record: 'Seguimiento' });
+    }
+
+    if (seguimiento.entrada) {
+        throw new AppException('VAL_RECORD_NOT_FOUND', { record: 'Codigo' });
     }
 
     // 4. Regresar solo el qr
-    return { qr: seguimiento.qr };
+    return { qr: seguimiento.qr,
+             viaje: viaje.id,
+             chofer: usuario.empleado.no_empleado,
+             transporte: viaje.transporte.id
+     };
     }
 
   async escanearCodigo(qr: string, userId: string) {
@@ -97,7 +107,7 @@ export class QRService {
     });
 
     if (!usuario || !usuario.empleado) {
-      throw new NotFoundException('No se encontró empleado para este usuario');
+      throw new AppException('VAL_RECORD_NOT_FOUND', { record: 'Usuario' });
     }
 
     const seguimiento = await this.seguimientoRepo.findOne({
@@ -105,7 +115,7 @@ export class QRService {
     });
 
     if (!seguimiento) {
-      throw new NotFoundException('Código QR no válido o no encontrado');
+      throw new AppException('VAL_RECORD_NOT_FOUND', { record: 'QR' });
     }
 
     if (!seguimiento.salida) {

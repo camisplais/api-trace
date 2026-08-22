@@ -3,6 +3,7 @@ import type { Request, Response } from 'express';
 import { ConfigService } from '@nestjs/config';
 import { AuthService } from './auth.service';
 import { SessionGuard } from '../auth/session.guard';
+import { TokenAuthGuard } from './token.guard';
 import { CurrentUser } from '../auth/current-user.decorator';
 
 @Controller('auth')
@@ -79,6 +80,16 @@ export class AuthController {
   @Get('me')
   @UseGuards(SessionGuard)
   async me(@CurrentUser() user: { id: string }) {
+    const info = await this.authService.getInfoUsuario(user.id);
+    if (!info) {
+      throw new NotFoundException('Usuario no encontrado');
+    }
+    return info;
+  }
+
+  @Get('me-app')
+  @UseGuards(TokenAuthGuard)
+  async meApp(@CurrentUser() user: { id: string }) {
     const info = await this.authService.getInfoUsuario(user.id);
     if (!info) {
       throw new NotFoundException('Usuario no encontrado');
