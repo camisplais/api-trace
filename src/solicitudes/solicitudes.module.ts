@@ -8,10 +8,11 @@ import { ViajeEmbarque } from 'src/viaje_embarque/entities/viaje_embarque.entity
 import { WhatsappModule } from 'src/common/whatsapp/whatsapp.module';
 import { Usuario } from 'src/usuarios/entities/usuario.entity';
 import { Notificacion } from 'src/notificaciones/entities/notificacione.entity';
+import { QRModule } from 'src/codigoQR/qr.module';
 
 @Module({
   imports: [TypeOrmModule.forFeature([Solicitude, ViajeEmbarque, Empleado, Usuario, Notificacion]), 
-  WhatsappModule,],
+  WhatsappModule,QRModule],
   controllers: [SolicitudesController],
   providers: [SolicitudesService],
 })

@@ -16,5 +16,6 @@ import { Transporte } from 'src/transportes/entities/transporte.entity';
   ],
   controllers: [QRController],
   providers: [QRService],
+  exports: [QRService],
 })
 export class QRModule {}

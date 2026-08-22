@@ -13,6 +13,7 @@ import { Estado } from './enums/estado.enum';
 import { Tipo } from './enums/tipo.enum';
 import { Notificacion } from 'src/notificaciones/entities/notificacione.entity';
 import { Estado as EstadoNotificacion } from 'src/notificaciones/enums/estado.enum';
+import { QRService } from 'src/codigoQR/qr.service';
 
 
 const empleado_emisor =  6;
@@ -32,7 +33,8 @@ export class SolicitudesService {
     @InjectRepository(Empleado) private readonly empleadoRepository: Repository<Empleado>,
     @InjectRepository(Usuario) private readonly usuarioRepository: Repository<Usuario>,
     @InjectRepository(Notificacion) private readonly notificacionRepository: Repository<Notificacion>,
-    private readonly whatsappService: WhatsappService
+    private readonly whatsappService: WhatsappService,
+    private readonly qrService: QRService
   ) {}
 
   async create(createSolicitudeDto: CreateSolicitudeDto) {
@@ -141,7 +143,13 @@ export class SolicitudesService {
     }
 
     solicitud.estado = Estado.ACEPTADO;
-    return this.solicitudRepository.save(solicitud);
+    const guardada = await this.solicitudRepository.save(solicitud);
+
+    if (solicitud.tipo === Tipo.SOLICITARQR) {
+      await this.qrService.generarCodigo(solicitud.viaje_embarque.viaje.id);
+    }
+
+    return guardada;
   }
 
   async rechazar (id: number) {

@@ -1,6 +1,7 @@
-import { Controller, Post, Body, Param, ParseIntPipe, UploadedFile, UseInterceptors, Get } from '@nestjs/common';
+import { Controller, Post, Body, Param, ParseIntPipe, UploadedFile, UseInterceptors, Get, Res } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { PruebaEntregaEmbarqueService } from './prueba_entrega_embarque.service';
+import type { Response } from 'express';
 
 @Controller('viajes')
 export class PruebaEntregaEmbarqueViajeController {
@@ -21,9 +22,12 @@ export class PruebaEntregaEmbarqueViajeController {
       file,
     );
   }
-
   @Get(':viajeId/embarques-pendientes')
-  async findEmbarquesPendientes(@Param('viajeId', ParseIntPipe) viajeId: number) {
-  return this.pruebaEntregaEmbarqueService.findEmbarquesPendientesPorViaje(viajeId);
-  }
+  async findEmbarquesPendientes(
+    @Param('viajeId', ParseIntPipe) viajeId: number,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    res.set('Cache-Control', 'no-store');
+    return this.pruebaEntregaEmbarqueService.findEmbarquesPendientesPorViaje(viajeId);
+}
 }
