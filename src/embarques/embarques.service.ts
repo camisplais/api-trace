@@ -11,6 +11,8 @@ import { Cliente } from 'src/clientes/entities/cliente.entity';
 import { Empleado } from 'src/empleados/entities/empleado.entity';
 import { ConfirmarImportEmbarquesDto } from './dto/confirmar-import-embarques.dto';
 import { DocCliente } from 'src/doc_cliente/entities/doc_cliente.entity';
+import { ViajeEmbarque } from 'src/viaje_embarque/entities/viaje_embarque.entity';
+import { SeguimientoViaje } from 'src/seguimiento_viaje/entities/seguimiento_viaje.entity';
 import { FiltroEmbarquesDto } from './dto/filtro-embarques.dto';
 
 const EXPECTED_COLUMNS = [
@@ -42,6 +44,8 @@ export class EmbarquesService {
     @InjectRepository(Cliente) private readonly clienteRepository: Repository<Cliente>,
     @InjectRepository(Empleado) private readonly empleadoRepository: Repository<Empleado>,
     @InjectRepository(DocCliente) private readonly docClienteRepo: Repository<DocCliente>,
+    @InjectRepository(ViajeEmbarque) private readonly viajeEmbarqueRepository: Repository<ViajeEmbarque>,
+    @InjectRepository(SeguimientoViaje) private readonly seguimientoViajeRepository: Repository<SeguimientoViaje>,
     @InjectDataSource() private readonly dataSource: DataSource
   ) {}
 
@@ -294,6 +298,72 @@ export class EmbarquesService {
       doc_cliente_id: dc.id,
       nombre: dc.documento.nombre,
     }));
+  }
+
+  /**
+   * Seguimiento (entrada / salida) de un embarque.
+   *
+   * Un embarque no tiene seguimiento propio: viaja dentro de uno o varios
+   * viajes (tabla viaje_embarque) y el seguimiento se registra a nivel de
+   * viaje (tabla seguimiento_viaje). Aquí resolvemos ese camino:
+   *   embarque -> viaje_embarque -> seguimiento_viaje
+   * y devolvemos un movimiento por cada viaje al que pertenece el embarque.
+   */
+  async getSeguimiento(embarqueId: number) {
+    const embarque = await this.embarqueRepository.findOne({
+      where: { id: embarqueId },
+    });
+
+    if (!embarque) {
+      throw new AppException('VAL_RECORD_NOT_FOUND', { record: 'Embarque' });
+    }
+
+    // 1. Viajes a los que pertenece el embarque (ordenados cronológicamente).
+    const viajeEmbarques = await this.viajeEmbarqueRepository.find({
+      where: { embarque: { id: embarqueId } },
+      relations: { viaje: true },
+      order: { createdAt: 'ASC' },
+    });
+
+    // El embarque todavía no está asignado a ningún viaje.
+    if (viajeEmbarques.length === 0) {
+      return {
+        data: [],
+        msg: {
+          code: 'OK',
+          msg: 'El embarque aún no está asignado a un viaje',
+        },
+      };
+    }
+
+    // 2. Seguimiento de esos viajes (puede no existir todavía para alguno).
+    const viajeIds = viajeEmbarques.map((ve) => ve.viaje.id);
+
+    const seguimientos = await this.seguimientoViajeRepository.find({
+      where: { viaje: { id: In(viajeIds) } },
+    });
+
+    const seguimientoPorViaje = new Map(
+      seguimientos.map((s) => [s.viaje.id, s]),
+    );
+
+    // 3. Un renglón por viaje: si aún no hay seguimiento, entrada/salida van nulos.
+    const data = viajeEmbarques.map((ve) => {
+      const seguimiento = seguimientoPorViaje.get(ve.viaje.id);
+      return {
+        viaje_id: ve.viaje.id,
+        entrada: seguimiento?.entrada ?? null,
+        salida: seguimiento?.salida ?? null,
+      };
+    });
+
+    return {
+      data,
+      msg: {
+        code: 'OK',
+        msg: 'Seguimiento del embarque obtenido con éxito',
+      },
+    };
   }
   
   create(createEmbarqueDto: any) {
