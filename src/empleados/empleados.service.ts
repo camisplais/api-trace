@@ -45,6 +45,12 @@ const EXTENSIONES_PERMITIDAS = ['.csv', '.xlsx', '.xls'];
 
 @Injectable()
 export class EmpleadosService {
+  /**
+   * Empleado comodin que siembra `seed-empleados` ("POR ASIGNAR"). Existe
+   * porque otras tablas lo necesitan como referencia, pero nunca se lista.
+   */
+  static readonly NO_EMPLEADO_COMODIN = 1;
+
   private readonly s3: S3Client;
   private readonly bucket: string;
 
@@ -266,7 +272,13 @@ export class EmpleadosService {
     const qb = this.empleadoRepo
       .createQueryBuilder('empleado')
       // Traemos la cuenta (usuario) para la columna "CUENTA" del listado.
-      .leftJoinAndSelect('empleado.usuario', 'usuario');
+      .leftJoinAndSelect('empleado.usuario', 'usuario')
+      // El seeder crea un empleado comodin "POR ASIGNAR" con no_empleado = 1
+      // que la BD necesita pero que no debe verse en el front. Se filtra aqui
+      // y no en el cliente para que el total y la paginacion no lo cuenten.
+      .where('empleado.no_empleado != :comodin', {
+        comodin: EmpleadosService.NO_EMPLEADO_COMODIN,
+      });
 
     if (query.departamento) {
       qb.andWhere('empleado.departamento = :departamento', {
@@ -394,7 +406,10 @@ export class EmpleadosService {
   async findChoferes(soloDisponibles = false) {
     const qb = this.empleadoRepo
       .createQueryBuilder('empleado')
-      .where('LOWER(empleado.puesto) LIKE :puesto', { puesto: '%chofer%' });
+      .where('LOWER(empleado.puesto) LIKE :puesto', { puesto: '%chofer%' })
+      .andWhere('empleado.no_empleado != :comodin', {
+        comodin: EmpleadosService.NO_EMPLEADO_COMODIN,
+      });
 
     if (soloDisponibles) {
       qb.andWhere('empleado.estado = :estado', { estado: Estado.DISPONIBLE });
