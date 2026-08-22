@@ -48,6 +48,11 @@ export class PruebaEntregaEmbarqueController {
     );
   }
 
+  @Get('pendientes') 
+  findEmbarquesPendientesGlobal() {
+    return this.pruebaEntregaEmbarqueService.findEmbarquesPendientesGlobal();
+  }
+
   @Get('embarque/:embarqueId')
   async findByEmbarque(@Param('embarqueId', ParseIntPipe) embarqueId: number) {
     return this.pruebaEntregaEmbarqueService.findByEmbarque(embarqueId);
@@ -57,6 +62,11 @@ export class PruebaEntregaEmbarqueController {
   findAll() {
     return this.pruebaEntregaEmbarqueService.findAll();
   }
+
+  @Get('embarque/:embarqueId/faltantes')
+async findDocumentosFaltantes(@Param('embarqueId', ParseIntPipe) embarqueId: number) {
+  return this.pruebaEntregaEmbarqueService.findDocsFaltantesPorEmbarque(embarqueId);
+}
 
   @Get(':id')
   findOne(@Param('id') id: string) {
