@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Not } from 'typeorm';
 import { Usuario, Estado } from './entities/usuario.entity';
 import { Empleado } from 'src/empleados/entities/empleado.entity';
+import { Role } from 'src/roles/entities/role.entity';
 import { AppException } from 'src/common/errors/app.exception';
 import * as bcrypt from 'bcrypt';
 
@@ -14,6 +15,9 @@ export class UsuariosService {
 
     @InjectRepository(Empleado)
     private readonly empleadosRepo: Repository<Empleado>,
+
+    @InjectRepository(Role)
+    private readonly rolesRepo: Repository<Role>,
   ) {}
 
   public toResponse(usuario: Usuario) {
@@ -50,12 +54,20 @@ export class UsuariosService {
     empleado: true,
   };
 
-  async createUser(empleadoId: number, username: string, password: string) {
+  async createUser(
+    empleadoId: number,
+    username: string,
+    password: string,
+    rolId: number,
+  ) {
     if (!username) {
       throw new AppException('VAL_REQUIRED_FIELD', { fieldName: 'username' });
     }
     if (!password) {
       throw new AppException('VAL_REQUIRED_FIELD', { fieldName: 'password' });
+    }
+    if (!rolId) {
+      throw new AppException('VAL_REQUIRED_FIELD', { fieldName: 'rol' });
     }
 
     // 1. Validar longitud exacta de 8 caracteres
@@ -107,12 +119,22 @@ export class UsuariosService {
       });
     }
 
+    const rol = await this.rolesRepo.findOneBy({ id: rolId });
+    if (!rol) {
+      throw new AppException('VAL_RECORD_NOT_FOUND', { record: 'Rol' });
+    }
+
     const passwordHash = await this.hashPassword(password);
 
+    // `celular` y `email` son NOT NULL en la entidad y no se piden en el alta,
+    // por eso arrancan vacios: el celular se llena despues desde "Editar cuenta".
     const usuario = this.usuariosRepo.create({
       username,
       password: passwordHash,
       empleado,
+      rol,
+      celular: '',
+      email: '',
     });
     await this.usuariosRepo.save(usuario);
 
