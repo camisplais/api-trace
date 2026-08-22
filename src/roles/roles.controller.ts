@@ -1,7 +1,8 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { UseGuards, Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
 import { RolesService } from './roles.service';
 import { CreateRoleDto } from './dto/create-role.dto';
 import { UpdateRoleDto } from './dto/update-role.dto';
+import { SessionGuard } from 'src/auth/session.guard';
 
 @Controller('roles')
 export class RolesController {
@@ -13,11 +14,13 @@ export class RolesController {
   }
 
   @Get()
+  @UseGuards(SessionGuard)
   findAll() {
     return this.rolesService.findAll();
   }
 
   @Get(':id')
+  @UseGuards(SessionGuard)
   findOne(@Param('id') id: string) {
     return this.rolesService.findOne(+id);
   }
