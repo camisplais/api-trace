@@ -15,6 +15,7 @@ import { ViajeEmbarque } from 'src/viaje_embarque/entities/viaje_embarque.entity
 import { Solicitude } from 'src/solicitudes/entities/solicitude.entity';
 import { Tipo } from 'src/solicitudes/enums/tipo.enum';
 import { Estado } from 'src/solicitudes/enums/estado.enum';
+import { FiltroPruebasDto } from './dto/filtro-prueba.dto';
 
 @Injectable()
 export class PruebaEntregaEmbarqueService {
@@ -349,7 +350,72 @@ export class PruebaEntregaEmbarqueService {
     };
   }
 
-  
+  // buscador de archivos aduanas
+
+  /** Las pruebas de entrega del cliente, filtradas y paginadas en SQL. */
+  async listarDocumentos(f: FiltroPruebasDto) {
+    const page = f.page ?? 1;
+    const limit = f.limit ?? 10;
+
+    const qb = this.pruebaRepo
+      .createQueryBuilder('prueba')
+      .innerJoinAndSelect('prueba.embarque', 'embarque')
+      .innerJoinAndSelect('prueba.docCliente', 'docCliente')
+      .innerJoinAndSelect('docCliente.documento', 'documento')
+      .where('embarque.cliente_id = :clienteId', { clienteId: f.cliente_id })
+      .andWhere('prueba.deletedAt IS NULL');
+
+    if (f.anio) {
+      qb.andWhere('YEAR(prueba.createdAt) = :anio', { anio: f.anio });
+    }
+    if (f.mes) {
+      qb.andWhere('MONTH(prueba.createdAt) = :mes', { mes: f.mes });
+    }
+    if (f.tipo) {
+      qb.andWhere('embarque.tipo = :tipo', { tipo: f.tipo });
+    }
+    if (f.search) {
+      const texto = f.search.replace(/[\\%_]/g, (c) => `\\${c}`);
+      qb.andWhere('documento.nombre LIKE :search', { search: `%${texto}%` });
+    }
+    if (f.fecha_inicio) {
+      qb.andWhere('prueba.createdAt >= :desde', { desde: `${f.fecha_inicio} 00:00:00` });
+    }
+    if (f.fecha_fin) {
+      qb.andWhere('prueba.createdAt <= :hasta', { hasta: `${f.fecha_fin} 23:59:59` });
+    }
+
+    const [items, total] = await qb
+      .orderBy('prueba.createdAt', 'DESC')
+      .addOrderBy('prueba.id', 'DESC')
+      .skip((page - 1) * limit)
+      .take(limit)
+      .getManyAndCount();
+
+    return {
+      data: items.map((p) => ({
+        id: p.id,
+        documento_nombre: p.docCliente.documento.nombre,
+        plan_embarque: p.embarque.plan_embarque,
+        tipo: p.embarque.tipo,
+        createdAt: p.createdAt,
+      })),
+      meta: { total, page, limit, totalPages: Math.ceil(total / limit) || 1 },
+    };
+  }
+
+  async obtenerUrlDescarga(id: number) {
+    const prueba = await this.pruebaRepo.findOneOrFail({ where: { id } });
+
+    return {
+      url: await getSignedUrl(
+        this.s3,
+        new GetObjectCommand({ Bucket: this.bucket, Key: prueba.ruta_imagen }),
+        { expiresIn: 300 },
+      ),
+    };
+  }
+
   update(id: number, updatePruebaEntregaEmbarqueDto: UpdatePruebaEntregaEmbarqueDto) {
     return `This action updates a #${id} pruebaEntregaEmbarque`;
   }

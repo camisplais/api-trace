@@ -1,10 +1,11 @@
-import { Controller, Get, Post, Body, Patch, Param,ParseIntPipe, Delete, UploadedFile,UseInterceptors, } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param,ParseIntPipe, Delete, UploadedFile,UseInterceptors, Query} from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { memoryStorage } from 'multer';
 import { PruebaEntregaEmbarqueService } from './prueba_entrega_embarque.service';
 import { CreatePruebaEntregaEmbarqueDto } from './dto/create-prueba_entrega_embarque.dto';
 import { UpdatePruebaEntregaEmbarqueDto } from './dto/update-prueba_entrega_embarque.dto';
 import { AppException } from 'src/common/errors/app.exception';
+import { FiltroPruebasDto } from './dto/filtro-prueba.dto';
 
 const TIPOS_PERMITIDOS = [
   'application/pdf',
@@ -53,24 +54,35 @@ export class PruebaEntregaEmbarqueController {
     return this.pruebaEntregaEmbarqueService.findEmbarquesPendientesGlobal();
   }
 
+  //navegacion aduanas
+  @Get('listar-documentos')
+  listarDocumentos(@Query() filtros: FiltroPruebasDto) {
+    return this.pruebaEntregaEmbarqueService.listarDocumentos(filtros);
+  }
+
   @Get('embarque/:embarqueId')
   async findByEmbarque(@Param('embarqueId', ParseIntPipe) embarqueId: number) {
     return this.pruebaEntregaEmbarqueService.findByEmbarque(embarqueId);
   }
   
+  @Get('embarque/:embarqueId/faltantes')
+  async findDocumentosFaltantes(@Param('embarqueId', ParseIntPipe) embarqueId: number) {
+    return this.pruebaEntregaEmbarqueService.findDocsFaltantesPorEmbarque(embarqueId);
+  }
   @Get()
   findAll() {
     return this.pruebaEntregaEmbarqueService.findAll();
   }
 
-  @Get('embarque/:embarqueId/faltantes')
-async findDocumentosFaltantes(@Param('embarqueId', ParseIntPipe) embarqueId: number) {
-  return this.pruebaEntregaEmbarqueService.findDocsFaltantesPorEmbarque(embarqueId);
-}
-
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.pruebaEntregaEmbarqueService.findOne(+id);
+  }
+
+  //navegacion aduanas
+  @Get(':id/url')
+  obtenerUrl(@Param('id', ParseIntPipe) id: number) {
+    return this.pruebaEntregaEmbarqueService.obtenerUrlDescarga(id);
   }
 
   @Patch(':id')
@@ -82,4 +94,5 @@ async findDocumentosFaltantes(@Param('embarqueId', ParseIntPipe) embarqueId: num
   remove(@Param('id') id: string) {
     return this.pruebaEntregaEmbarqueService.remove(+id);
   }
+
 }
