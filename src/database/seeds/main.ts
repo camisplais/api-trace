@@ -23,8 +23,8 @@ async function bootstrap() {
     console.log('Ejecutando seeders...');
     await seedDocumentos(dataSource);
     await seedClientes(dataSource);
-    await seedEmpleados(dataSource);
     await seedTransportes(dataSource);
+    await seedEmpleados(dataSource);
     await seedDocCliente(dataSource)
     await seedEmbarques(dataSource);
     await seedViajes(dataSource);

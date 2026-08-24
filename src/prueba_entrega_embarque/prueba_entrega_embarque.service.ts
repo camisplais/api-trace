@@ -303,7 +303,14 @@ export class PruebaEntregaEmbarqueService {
           where: { embarque: { id: embarque.id } },
         });
 
+        const viajeEmbarque = await this.viajeEmbarqueRepo.findOne({
+        where: { embarque: { id: embarque.id } },
+        relations: { viaje: true },
+      });
+
         return {
+          viaje_embarque_id: viajeEmbarque?.id ?? null,
+          viaje_id: viajeEmbarque?.viaje?.id ?? null,
           embarque,
           total_requeridos: totalRequeridos,
           total_subidos: totalSubidos,

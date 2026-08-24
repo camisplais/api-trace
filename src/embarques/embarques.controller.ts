@@ -15,9 +15,8 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { EmbarquesService } from './embarques.service';
 import { ConfirmarImportEmbarquesDto } from './dto/confirmar-import-embarques.dto';
 import { FiltroEmbarquesDto } from './dto/filtro-embarques.dto';
-import { AuthService } from 'src/auth/auth.service';
 import { SessionGuard } from 'src/auth/session.guard';
-import { CurrentUser } from 'src/auth/current-user.decorator';
+import { AuthService } from 'src/auth/auth.service';
 
 @Controller('embarques')
 export class EmbarquesController {
@@ -40,6 +39,13 @@ export class EmbarquesController {
     return data;
   }
 
+  @Get()
+  @UseGuards(SessionGuard)
+  async findAll(@Query() filtros: FiltroEmbarquesDto) {
+    const { data, meta } = await this.embarquesService.findAllFiltrado(filtros);
+    return { data, meta, msg:null };
+  }
+
   @Get(':id/pruebas-entrega')
   @UseGuards(SessionGuard)
   async getDocumentosRequeridos(@Param('id', ParseIntPipe) id: number) {
@@ -50,12 +56,5 @@ export class EmbarquesController {
   @UseGuards(SessionGuard)
   async getSeguimiento(@Param('id', ParseIntPipe) id: number) {
     return this.embarquesService.getSeguimiento(id);
-  }
-
-  @Get()
-  @UseGuards(SessionGuard)
-  async findAll(@Query() filtros: FiltroEmbarquesDto) {
-    const { data, meta } = await this.embarquesService.findAllFiltrado(filtros);
-    return { data, meta, msg:null };
   }
 }
