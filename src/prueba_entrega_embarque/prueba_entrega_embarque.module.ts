@@ -8,9 +8,12 @@ import { DocCliente } from 'src/doc_cliente/entities/doc_cliente.entity';
 import { ViajeEmbarque } from 'src/viaje_embarque/entities/viaje_embarque.entity';
 import { Solicitude } from 'src/solicitudes/entities/solicitude.entity';
 import { PruebaEntregaEmbarqueViajeController } from './prueba_entrega_embarque_viaje.controller';
+import { AuthModule } from 'src/auth/auth.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([PruebaEntregaEmbarque, Embarque, DocCliente, ViajeEmbarque, Solicitude])],
+  imports: [TypeOrmModule.forFeature([PruebaEntregaEmbarque, Embarque, DocCliente, ViajeEmbarque, Solicitude]),
+    AuthModule 
+  ],
   controllers: [PruebaEntregaEmbarqueController,
     PruebaEntregaEmbarqueViajeController
   ],

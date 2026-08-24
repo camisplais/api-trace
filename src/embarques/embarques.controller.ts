@@ -26,14 +26,14 @@ export class EmbarquesController {
   ) {}
 
   @Post('import/preview')
-  //@UseGuards(SessionGuard)
+  @UseGuards(SessionGuard)
   @UseInterceptors(FileInterceptor('file'))
   async importarArchivo(@UploadedFile() file: Express.Multer.File) {
     return this.embarquesService.importarArchivo(file);
   }
 
   @Post('import/confirmar')
-  //@UseGuards(SessionGuard)
+  @UseGuards(SessionGuard)
   @HttpCode(201)
   async confirmarImportacion(@Body() confirmarImportEmbarquesDto: ConfirmarImportEmbarquesDto) {
     const data = await this.embarquesService.confirmarImportacion(confirmarImportEmbarquesDto);
@@ -41,19 +41,19 @@ export class EmbarquesController {
   }
 
   @Get(':id/pruebas-entrega')
-  //@UseGuards(SessionGuard)
+  @UseGuards(SessionGuard)
   async getDocumentosRequeridos(@Param('id', ParseIntPipe) id: number) {
     return this.embarquesService.getDocumentosRequeridos(id);
   }
 
   @Get(':id/seguimiento')
-  //@UseGuards(SessionGuard)
+  @UseGuards(SessionGuard)
   async getSeguimiento(@Param('id', ParseIntPipe) id: number) {
     return this.embarquesService.getSeguimiento(id);
   }
 
   @Get()
-  //@UseGuards(SessionGuard)
+  @UseGuards(SessionGuard)
   async findAll(@Query() filtros: FiltroEmbarquesDto) {
     const { data, meta } = await this.embarquesService.findAllFiltrado(filtros);
     return { data, meta, msg:null };
