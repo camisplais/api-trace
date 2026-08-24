@@ -38,7 +38,8 @@ import { QRModule } from './codigoQR/qr.module';
         password: configService.get<string>('DB_PASSWORD'),
         database: configService.get<string>('DB_DATABASE'),
         entities: [__dirname + '/**/*.entity{.ts,.js}'],
-        synchronize: true,
+        migrations: [__dirname + '/migrations/*{.ts,.js}'],
+        synchronize: process.env.NODE_ENV !== 'production',
       }),
     }),
     AuthModule,
@@ -59,7 +60,7 @@ import { QRModule } from './codigoQR/qr.module';
     ViajeEmbarqueModule,
     SolicitudesModule,
     NotificacionesModule,
-    SolicitudesModule
+    SolicitudesModule,
   ],
   controllers: [AppController],
   providers: [AppService],
