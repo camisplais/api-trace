@@ -24,7 +24,6 @@ async function bootstrap() {
     await seedDocumentos(dataSource);
     await seedClientes(dataSource);
     await seedEmpleados(dataSource);
-    await seedTransportes(dataSource);
     await seedDocCliente(dataSource)
     await seedEmbarques(dataSource);
     await seedViajes(dataSource);

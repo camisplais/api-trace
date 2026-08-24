@@ -3,7 +3,7 @@ import { CreateSolicitudeDto } from './dto/create-solicitude.dto';
 import { UpdateSolicitudeDto } from './dto/update-solicitude.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Solicitude } from './entities/solicitude.entity';
-import { Repository } from 'typeorm';
+import { FindOptionsWhere, Repository } from 'typeorm';
 import { ViajeEmbarque } from 'src/viaje_embarque/entities/viaje_embarque.entity';
 import { Empleado } from 'src/empleados/entities/empleado.entity';
 import { WhatsappService } from 'src/common/whatsapp/whatsapp.service';
@@ -170,9 +170,17 @@ export class SolicitudesService {
   }
 
 
-  findAll() {
-    return `This action returns all solicitudes`;
-  }
+  async findAll(filtros: { tipo?: Tipo; estado?: Estado; receptorId?: number }) {
+  const where: FindOptionsWhere<Solicitude> = {};
+  if (filtros.tipo) where.tipo = filtros.tipo;
+  if (filtros.estado) where.estado = filtros.estado;
+  if (filtros.receptorId) where.empleado_receptor = { id: filtros.receptorId };
+
+  return this.solicitudRepository.find({
+    where,
+    order: { createdAt: 'DESC' },
+  });
+}
 
   findOne(id: number) {
     return `This action returns a #${id} solicitude`;

@@ -1,10 +1,14 @@
-import { UseGuards,Controller, Get, Post, Body, Patch, Param, Delete, HttpCode, ParseIntPipe } from '@nestjs/common';
+import { UseGuards,Controller, Get, Post, Body, Patch, Param, Delete, HttpCode, ParseIntPipe, Query } from '@nestjs/common';
 import { SolicitudesService } from './solicitudes.service';
 import { CreateSolicitudeDto } from './dto/create-solicitude.dto';
 import { UpdateSolicitudeDto } from './dto/update-solicitude.dto';
 import { AuthService } from 'src/auth/auth.service';
 import { SessionGuard } from 'src/auth/session.guard';
 import { CurrentUser } from 'src/auth/current-user.decorator';
+import { Solicitude } from './entities/solicitude.entity';
+import { FindOptionsWhere, Repository } from 'typeorm';
+import { Estado } from './enums/estado.enum';
+import { Tipo } from './enums/tipo.enum';
 
 @Controller('solicitudes')
 export class SolicitudesController {
@@ -17,11 +21,19 @@ export class SolicitudesController {
     return this.solicitudesService.create(createSolicitudeDto);
   }
 
-  @Get()
+  @Get() 
   @UseGuards(SessionGuard)
-  findAll() {
-    return this.solicitudesService.findAll();
-  }
+  async findAll(
+  @Query('tipo') tipo?: Tipo,
+  @Query('estado') estado?: Estado,
+  @Query('receptor_id') receptorId?: string,
+) {
+  return this.solicitudesService.findAll({
+    tipo,
+    estado,
+    receptorId: receptorId ? Number(receptorId) : undefined,
+  });
+}
 
   @Get(':id')
   @UseGuards(SessionGuard)
@@ -36,7 +48,7 @@ export class SolicitudesController {
   }
 
   @Patch(':id/aceptar')
-  @UseGuards(SessionGuard)
+  //@UseGuards(SessionGuard)
   async aceptar(@Param('id', ParseIntPipe) id: number) {
     return this.solicitudesService.aceptar(id);
   }
