@@ -1,4 +1,5 @@
 import {
+  UseGuards,
   Controller,
   Get,
   Post,
@@ -18,6 +19,9 @@ import { CreateTransporteDto } from './dto/create-transporte.dto';
 import { UpdateTransporteDto } from './dto/update-transporte.dto';
 import { FindTransportesDto } from './dto/find-transportes.dto';
 import { AppException } from 'src/common/errors/app.exception';
+import { AuthService } from 'src/auth/auth.service';
+import { SessionGuard } from 'src/auth/session.guard';
+import { CurrentUser } from 'src/auth/current-user.decorator';
 
 // Imagen del transporte: JPG o PNG, max 5MB (segun diseno)
 const TIPOS_IMAGEN_PERMITIDOS = ['image/jpeg', 'image/png'];
@@ -36,10 +40,12 @@ const imagenInterceptor = () =>
   });
 
 @Controller('transportes')
+@UseGuards(SessionGuard)
 export class TransportesController {
   constructor(private readonly transportesService: TransportesService) {}
 
   @Post()
+  @UseGuards(SessionGuard)
   @UseInterceptors(imagenInterceptor())
   create(
     @Body() createTransporteDto: CreateTransporteDto,
@@ -49,21 +55,25 @@ export class TransportesController {
   }
 
   @Get()
+  @UseGuards(SessionGuard)
   findAll(@Query() query: FindTransportesDto) {
     return this.transportesService.findAll(query);
   }
 
   @Get('planta')
+  @UseGuards(SessionGuard)
   findEnPlanta() {
     return this.transportesService.findEnPlanta();
   }
 
   @Get(':id')
+  @UseGuards(SessionGuard)
   findOne(@Param('id', ParseIntPipe) id: number) {
     return this.transportesService.findOne(id);
   }
 
   @Patch(':id')
+  @UseGuards(SessionGuard)
   @UseInterceptors(imagenInterceptor())
   update(
     @Param('id', ParseIntPipe) id: number,
@@ -74,6 +84,7 @@ export class TransportesController {
   }
 
   @Delete(':id')
+  @UseGuards(SessionGuard)
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.transportesService.remove(id);
   }

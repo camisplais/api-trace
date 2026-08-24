@@ -46,13 +46,13 @@ export class ViajesController {
   }
 
   @Patch(':id')
-  //@UseGuards(SessionGuard)
+  @UseGuards(SessionGuard)
   update(@Param('id') id: string, @Body() updateViajeDto: UpdateViajeDto) {
     return this.viajesService.update(+id, updateViajeDto);
   }
 
   @Delete(':id')
-  //@UseGuards(SessionGuard)
+  @UseGuards(SessionGuard)
   remove(@Param('id') id: string) {
     return this.viajesService.remove(+id);
   }

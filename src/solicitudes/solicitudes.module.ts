@@ -9,10 +9,11 @@ import { WhatsappModule } from 'src/common/whatsapp/whatsapp.module';
 import { Usuario } from 'src/usuarios/entities/usuario.entity';
 import { Notificacion } from 'src/notificaciones/entities/notificacione.entity';
 import { QRModule } from 'src/codigoQR/qr.module';
+import { AuthModule } from 'src/auth/auth.module';
 
 @Module({
   imports: [TypeOrmModule.forFeature([Solicitude, ViajeEmbarque, Empleado, Usuario, Notificacion]), 
-  WhatsappModule,QRModule],
+  WhatsappModule,QRModule, AuthModule],
   controllers: [SolicitudesController],
   providers: [SolicitudesService],
 })
