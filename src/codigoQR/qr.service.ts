@@ -29,31 +29,39 @@ export class QRService {
   ) {}
 
   async generarCodigo(viajeId: number) {
-    // 1. Validar que el viaje exista
-    const viaje = await this.viajeRepo.findOneBy({ id: viajeId });
+    const viaje = await this.viajeRepo.findOne({
+      where: { id: viajeId },
+      relations: { transporte: true, empleado_chofer: true },
+    });
     if (!viaje) {
       throw new AppException('VAL_RECORD_NOT_FOUND', { record: 'Viaje' });
     }
 
-    const codigoQr = uuidv4();
-
-    // 2. Buscar si ya existe seguimiento para este viaje
-    const seguimiento = await this.seguimientoRepo.findOne({
+    let seguimiento = await this.seguimientoRepo.findOne({
       where: { viaje: { id: viajeId } },
     });
 
-    // 3. Ya existe -> solo reemplazar el qr
-    if (seguimiento) {
-      seguimiento.qr = codigoQr;
-      return this.seguimientoRepo.save(seguimiento);
+    if (seguimiento && seguimiento.entrada && seguimiento.salida) {
+      throw new AppException('QR_EXPIRED');
     }
 
-    // 4. No existe -> crear registro nuevo solo con el qr
-    const nuevo = this.seguimientoRepo.create({
-      viaje,
+    const codigoQr = uuidv4();
+
+    if (seguimiento) {
+      seguimiento.qr = codigoQr;
+      await this.seguimientoRepo.save(seguimiento);
+    } else {
+      seguimiento = this.seguimientoRepo.create({ viaje, qr: codigoQr });
+      await this.seguimientoRepo.save(seguimiento);
+    }
+
+    // Devolver el MISMO formato limpio que getUltimoCodigo
+    return {
       qr: codigoQr,
-    });
-    return this.seguimientoRepo.save(nuevo);
+      viaje: viaje.id,
+      chofer: viaje.empleado_chofer.no_empleado,
+      transporte: viaje.transporte.id,
+    };
   }
 
   async getUltimoCodigo(userId: string) {
@@ -89,7 +97,7 @@ export class QRService {
     }
 
     if (seguimiento.entrada) {
-        throw new AppException('VAL_RECORD_NOT_FOUND', { record: 'Codigo' });
+        throw new AppException('QR_EXPIRED');
     }
 
     // 4. Regresar solo el qr
@@ -100,7 +108,7 @@ export class QRService {
      };
     }
 
-  async escanearCodigo(qr: string, userId: string) {
+  async escanearCodigo(userId: string,qr: string) {
     const usuario = await this.usuarioRepo.findOne({
       where: { id: Number(userId) },
       relations: { empleado: true },
@@ -112,6 +120,7 @@ export class QRService {
 
     const seguimiento = await this.seguimientoRepo.findOne({
       where: { qr },
+      relations: { viaje: { transporte: true , viajeEmbarques: true,} },   
     });
 
     if (!seguimiento) {
@@ -145,8 +154,6 @@ export class QRService {
       };
     }
 
-    throw new BadRequestException(
-      'Este viaje ya registró entrada y salida. No se puede volver a escanear.',
-    );
+    throw new AppException('QR_EXPIRED');  
   }
 }

@@ -8,7 +8,7 @@ import { Request } from 'express';
 
 @Injectable()
 export class TokenAuthGuard implements CanActivate {
-  private readonly userinfoUrl = 'http://192.168.1.12:3000/oidc/me';
+  private readonly userinfoUrl = `${process.env.IDP_URL}/oidc/me`;
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const req = context.switchToHttp().getRequest<Request>();

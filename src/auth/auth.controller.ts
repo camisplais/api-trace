@@ -1,4 +1,4 @@
-import { UseGuards,Controller, Get, Post, Query, Req, Res,NotFoundException } from '@nestjs/common';
+import { UseGuards,Controller, Get, Post, Patch,Query, Body,Req, Res,NotFoundException } from '@nestjs/common';
 import type { Request, Response } from 'express';
 import { ConfigService } from '@nestjs/config';
 import { AuthService } from './auth.service';
@@ -95,6 +95,15 @@ export class AuthController {
       throw new NotFoundException('Usuario no encontrado');
     }
     return info;
+  }
+
+  @Patch('empleado/password-app')
+  @UseGuards(TokenAuthGuard)
+  async updateUserPassword(
+    @CurrentUser() user: {id:number},
+    @Body() body: { password: string },
+  ) {
+    return this.authService.updateUserPassword(user.id, body.password);
   }
   
   @Post('logout')
