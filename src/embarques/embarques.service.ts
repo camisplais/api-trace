@@ -14,6 +14,7 @@ import { DocCliente } from 'src/doc_cliente/entities/doc_cliente.entity';
 import { ViajeEmbarque } from 'src/viaje_embarque/entities/viaje_embarque.entity';
 import { SeguimientoViaje } from 'src/seguimiento_viaje/entities/seguimiento_viaje.entity';
 import { FiltroEmbarquesDto } from './dto/filtro-embarques.dto';
+import { Usuario } from 'src/usuarios/entities/usuario.entity'; // ←  agregado
 
 const EXPECTED_COLUMNS = [
   'plan_embarque',
@@ -26,7 +27,7 @@ const EXPECTED_COLUMNS = [
 
 const EXTENSIONES_PERMITIDAS = ['.csv', '.xls', '.xlsx'];
 
-const empleado_temp = 1;
+// const empleado_temp = 1;  ← eliminado, ya no se usa
 
 interface FilaEmbarque {
   plan_embarque: string;
@@ -46,6 +47,7 @@ export class EmbarquesService {
     @InjectRepository(DocCliente) private readonly docClienteRepo: Repository<DocCliente>,
     @InjectRepository(ViajeEmbarque) private readonly viajeEmbarqueRepository: Repository<ViajeEmbarque>,
     @InjectRepository(SeguimientoViaje) private readonly seguimientoViajeRepository: Repository<SeguimientoViaje>,
+    @InjectRepository(Usuario) private readonly usuarioRepository: Repository<Usuario>, // ← agregado
     @InjectDataSource() private readonly dataSource: DataSource
   ) {}
 
@@ -161,12 +163,15 @@ export class EmbarquesService {
     return { fila: index + 2, datos, errores };
   }
 
-  async confirmarImportacion(dto: ConfirmarImportEmbarquesDto) {
-     const clienteIds = [...new Set(dto.embarques.map((e) => e.cliente_id))];
+  async confirmarImportacion(dto: ConfirmarImportEmbarquesDto, usuarioId: string) { // ← firma actualizada
+    const clienteIds = [...new Set(dto.embarques.map((e) => e.cliente_id))];
 
-     const [clientes, empleadoCustomer] = await Promise.all([
+    const [clientes, usuario] = await Promise.all([ // ← cambiado
       this.clienteRepository.findBy({ id: In(clienteIds) }),
-      this.empleadoRepository.findOneBy({ id: empleado_temp }), 
+      this.usuarioRepository.findOne({
+        where: { id: Number(usuarioId) },
+        relations: { empleado: true },
+      }),
     ]);
 
     const clienteMap = new Map(clientes.map((c) => [c.id, c]));
@@ -174,19 +179,21 @@ export class EmbarquesService {
     const clientesFaltantes = clienteIds.filter((id) => !clienteMap.has(id));
 
     if (clientesFaltantes.length > 0) {
-          throw new AppException('VAL_RECORD_NOT_FOUND', {
-            record: 'cliente_id',
-          } );
-        }
-    if (!empleadoCustomer) {
-      throw new AppException('VAL_RECORD_NOT_FOUND', { record: 'empleado_id'});
+      throw new AppException('VAL_RECORD_NOT_FOUND', {
+        record: 'cliente_id',
+      });
     }
+    if (!usuario?.empleado) { // ← cambiado
+      throw new AppException('VAL_RECORD_NOT_FOUND', { record: 'empleado_id' });
+    }
+
+    const empleadoCustomer = usuario.empleado; // ← nuevo
 
     return this.dataSource.transaction(async (manager) => {
       const embarques = dto.embarques.map((item) =>
         manager.create(Embarque, {
           cliente: clienteMap.get(item.cliente_id),
-          empleado_customer: empleadoCustomer,
+          empleado: empleadoCustomer,
           plan_embarque: item.plan_embarque,
           fecha: new Date(item.fecha),
           hora: item.hora,
@@ -226,7 +233,7 @@ export class EmbarquesService {
       .leftJoinAndSelect('embarque.empleado', 'empleado')
       .addSelect((subQuery) => {
         return subQuery
-          .select('ve.viaje_id', 'viaje_id')   // 👈 ahora sí selecciona el ID real, no un conteo
+          .select('ve.viaje_id', 'viaje_id')
           .from('viaje_embarque', 've')
           .where('ve.embarque_id = embarque.id')
           .limit(1);
@@ -318,14 +325,12 @@ export class EmbarquesService {
       throw new AppException('VAL_RECORD_NOT_FOUND', { record: 'Embarque' });
     }
 
-    // 1. Viajes a los que pertenece el embarque (ordenados cronológicamente).
     const viajeEmbarques = await this.viajeEmbarqueRepository.find({
       where: { embarque: { id: embarqueId } },
       relations: { viaje: true },
       order: { createdAt: 'ASC' },
     });
 
-    // El embarque todavía no está asignado a ningún viaje.
     if (viajeEmbarques.length === 0) {
       return {
         data: [],
@@ -336,7 +341,6 @@ export class EmbarquesService {
       };
     }
 
-    // 2. Seguimiento de esos viajes (puede no existir todavía para alguno).
     const viajeIds = viajeEmbarques.map((ve) => ve.viaje.id);
 
     const seguimientos = await this.seguimientoViajeRepository.find({
@@ -347,7 +351,6 @@ export class EmbarquesService {
       seguimientos.map((s) => [s.viaje.id, s]),
     );
 
-    // 3. Un renglón por viaje: si aún no hay seguimiento, entrada/salida van nulos.
     const data = viajeEmbarques.map((ve) => {
       const seguimiento = seguimientoPorViaje.get(ve.viaje.id);
       return {

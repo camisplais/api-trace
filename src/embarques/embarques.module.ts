@@ -9,10 +9,20 @@ import { DocCliente } from 'src/doc_cliente/entities/doc_cliente.entity';
 import { ViajeEmbarque } from 'src/viaje_embarque/entities/viaje_embarque.entity';
 import { SeguimientoViaje } from 'src/seguimiento_viaje/entities/seguimiento_viaje.entity';
 import { AuthModule } from 'src/auth/auth.module';
+import { Usuario } from 'src/usuarios/entities/usuario.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Embarque, Cliente, Empleado, DocCliente, ViajeEmbarque, SeguimientoViaje]),
-    AuthModule
+  imports: [
+    TypeOrmModule.forFeature([
+      Embarque,
+      Cliente,
+      Empleado,
+      DocCliente,
+      ViajeEmbarque,
+      SeguimientoViaje,
+      Usuario,
+    ]),
+    AuthModule,
   ],
   controllers: [EmbarquesController],
   providers: [EmbarquesService],

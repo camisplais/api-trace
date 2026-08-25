@@ -17,6 +17,7 @@ import { ConfirmarImportEmbarquesDto } from './dto/confirmar-import-embarques.dt
 import { FiltroEmbarquesDto } from './dto/filtro-embarques.dto';
 import { SessionGuard } from 'src/auth/session.guard';
 import { AuthService } from 'src/auth/auth.service';
+import { CurrentUser } from 'src/auth/current-user.decorator';
 
 @Controller('embarques')
 export class EmbarquesController {
@@ -34,8 +35,8 @@ export class EmbarquesController {
   @Post('import/confirmar')
   @UseGuards(SessionGuard)
   @HttpCode(201)
-  async confirmarImportacion(@Body() confirmarImportEmbarquesDto: ConfirmarImportEmbarquesDto) {
-    const data = await this.embarquesService.confirmarImportacion(confirmarImportEmbarquesDto);
+  async confirmarImportacion(@Body() confirmarImportEmbarquesDto: ConfirmarImportEmbarquesDto, @CurrentUser() user: { id: string }) {
+    const data = await this.embarquesService.confirmarImportacion(confirmarImportEmbarquesDto, user.id);
     return data;
   }
 

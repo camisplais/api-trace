@@ -15,15 +15,12 @@ import { Notificacion } from 'src/notificaciones/entities/notificacione.entity';
 import { Estado as EstadoNotificacion } from 'src/notificaciones/enums/estado.enum';
 import { QRService } from 'src/codigoQR/qr.service';
 
-
-const empleado_emisor =  6;
 const coordinador_stock = 8;
 const empleado_aduanas = 4;
 
 const tipos_cs = [Tipo.SOLICITARQR, Tipo.PE_DESFASADAS, Tipo.ESTATUS_SALIDA];
 
 const tipos_con_whatsapp = [Tipo.SOLICITARQR];
-
 
 @Injectable()
 export class SolicitudesService {
@@ -34,21 +31,19 @@ export class SolicitudesService {
     @InjectRepository(Usuario) private readonly usuarioRepository: Repository<Usuario>,
     @InjectRepository(Notificacion) private readonly notificacionRepository: Repository<Notificacion>,
     private readonly whatsappService: WhatsappService,
-    private readonly qrService: QRService
+    private readonly qrService: QRService,
   ) {}
 
-  async create(createSolicitudeDto: CreateSolicitudeDto) {
+  async create(createSolicitudeDto: CreateSolicitudeDto, usuarioId: string) {
     const viajeEmbarque = await this.viajeEmbarqueRepository.findOne({
       where: { id: createSolicitudeDto.viaje_embarque_id },
     });
 
     if (!viajeEmbarque) {
-      throw new AppException('VAL_RECORD_NOT_FOUND', {record: 'ViajeEmbarque'}
-        
-      );
+      throw new AppException('VAL_RECORD_NOT_FOUND', { record: 'ViajeEmbarque' });
     }
     const empleadoReceptorId = this.resolverIdReceptor(createSolicitudeDto, viajeEmbarque);
-    const empleadoEmisorId = this.resolverIdEmisor(createSolicitudeDto.tipo);
+    const empleadoEmisorId = await this.resolverIdEmisor(createSolicitudeDto.tipo, usuarioId);
 
     const [empleadoReceptor, empleadoEmisor, usuarioReceptor] = await Promise.all([
       this.empleadoRepository.findOneBy({ id: empleadoReceptorId }),
@@ -59,12 +54,11 @@ export class SolicitudesService {
     ]);
 
     if (!empleadoReceptor) {
-      throw new AppException('VAL_RECORD_NOT_FOUND', {record: 'Empleado', id: empleadoReceptorId });
+      throw new AppException('VAL_RECORD_NOT_FOUND', { record: 'Empleado', id: empleadoReceptorId });
     }
     if (!empleadoEmisor) {
-      throw new AppException('VAL_RECORD_NOT_FOUND', {record: 'Empleado', id: empleadoEmisorId });
+      throw new AppException('VAL_RECORD_NOT_FOUND', { record: 'Empleado', id: empleadoEmisorId });
     }
-    
 
     const solicitud = this.solicitudRepository.create({
       viaje_embarque: viajeEmbarque,
@@ -73,8 +67,6 @@ export class SolicitudesService {
       tipo: createSolicitudeDto.tipo,
       estado: Estado.PENDIENTE,
     });
-
-    
 
     const guardada = await this.solicitudRepository.save(solicitud);
 
@@ -97,7 +89,7 @@ export class SolicitudesService {
     }
 
     const debeEnviarWhatsapp = tipos_con_whatsapp.includes(createSolicitudeDto.tipo);
-    
+
     if (debeEnviarWhatsapp && usuarioReceptor?.celular) {
       const mensaje = `Tienes una nueva solicitud pendiente de ${empleadoEmisor.nombre} ${empleadoEmisor.apellido_paterno} para el viaje #${viajeEmbarque.viaje.id}.`;
       void this.whatsappService.enviarMensaje(usuarioReceptor.celular, mensaje);
@@ -105,8 +97,8 @@ export class SolicitudesService {
 
     return solicitudCompleta;
   }
- 
-    private resolverIdReceptor(dto: CreateSolicitudeDto, viajeEmbarque: ViajeEmbarque): number {
+
+  private resolverIdReceptor(dto: CreateSolicitudeDto, viajeEmbarque: ViajeEmbarque): number {
     if (dto.tipo === Tipo.PE_PENDIENTES) {
       return viajeEmbarque.viaje.empleado_embarque.id;
     }
@@ -120,17 +112,26 @@ export class SolicitudesService {
     }
 
     return dto.empleado_receptor_id;
-  
   }
 
-  private resolverIdEmisor(tipo: Tipo): number {
+  private async resolverIdEmisor(tipo: Tipo, usuarioId: string): Promise<number> {
     if (tipo === Tipo.PE_PENDIENTES) {
       return empleado_aduanas;
     }
-    return empleado_emisor;
+
+    const usuario = await this.usuarioRepository.findOne({
+      where: { id: Number(usuarioId) },
+      relations: { empleado: true },
+    });
+
+    if (!usuario?.empleado) {
+      throw new AppException('VAL_RECORD_NOT_FOUND', { record: 'empleado_id' });
+    }
+
+    return usuario.empleado.id;
   }
 
-  async aceptar (id: number) {
+  async aceptar(id: number) {
     const solicitud = await this.solicitudRepository.findOne({
       where: { id },
       relations: { viaje_embarque: true, empleado_emisor: true, empleado_receptor: true },
@@ -152,7 +153,7 @@ export class SolicitudesService {
     return guardada;
   }
 
-  async rechazar (id: number) {
+  async rechazar(id: number) {
     const solicitud = await this.solicitudRepository.findOne({
       where: { id },
       relations: { viaje_embarque: true, empleado_emisor: true, empleado_receptor: true },
@@ -169,18 +170,17 @@ export class SolicitudesService {
     return this.solicitudRepository.save(solicitud);
   }
 
-
   async findAll(filtros: { tipo?: Tipo; estado?: Estado; receptorId?: number }) {
-  const where: FindOptionsWhere<Solicitude> = {};
-  if (filtros.tipo) where.tipo = filtros.tipo;
-  if (filtros.estado) where.estado = filtros.estado;
-  if (filtros.receptorId) where.empleado_receptor = { id: filtros.receptorId };
+    const where: FindOptionsWhere<Solicitude> = {};
+    if (filtros.tipo) where.tipo = filtros.tipo;
+    if (filtros.estado) where.estado = filtros.estado;
+    if (filtros.receptorId) where.empleado_receptor = { id: filtros.receptorId };
 
-  return this.solicitudRepository.find({
-    where,
-    order: { createdAt: 'DESC' },
-  });
-}
+    return this.solicitudRepository.find({
+      where,
+      order: { createdAt: 'DESC' },
+    });
+  }
 
   findOne(id: number) {
     return `This action returns a #${id} solicitude`;
@@ -193,8 +193,4 @@ export class SolicitudesService {
   remove(id: number) {
     return `This action removes a #${id} solicitude`;
   }
-  }
-  
-
-
-
+}
