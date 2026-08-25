@@ -154,6 +154,9 @@ export class QRService {
       };
     }
 
-    throw new AppException('QR_EXPIRED');  
+    return {
+        evento: 'expirado',
+        viajeId: seguimiento.viaje.id,
+    }; 
   }
 }

@@ -9,6 +9,7 @@ import { Solicitude } from './entities/solicitude.entity';
 import { FindOptionsWhere, Repository } from 'typeorm';
 import { Estado } from './enums/estado.enum';
 import { Tipo } from './enums/tipo.enum';
+import { TokenAuthGuard } from 'src/auth/token.guard';
 
 @Controller('solicitudes')
 export class SolicitudesController {
@@ -19,6 +20,13 @@ export class SolicitudesController {
   @HttpCode(201)
   async create(@Body() createSolicitudeDto: CreateSolicitudeDto, @CurrentUser() user: { id: string }) {
     return this.solicitudesService.create(createSolicitudeDto, user.id);
+  }
+
+  @Post('notificar-coordinador')
+  @UseGuards(TokenAuthGuard)
+  async notificarCoordinador(@Body() body: { viajeId: number }) {
+    const { viajeId } = body;
+    return this.solicitudesService.notificacionCoordinador(Number(viajeId));
   }
 
   @Get() 

@@ -14,6 +14,7 @@ import { Tipo } from './enums/tipo.enum';
 import { Notificacion } from 'src/notificaciones/entities/notificacione.entity';
 import { Estado as EstadoNotificacion } from 'src/notificaciones/enums/estado.enum';
 import { QRService } from 'src/codigoQR/qr.service';
+import { Viaje } from 'src/viajes/entities/viaje.entity';
 
 const coordinador_stock = 8;
 const empleado_aduanas = 4;
@@ -30,6 +31,7 @@ export class SolicitudesService {
     @InjectRepository(Empleado) private readonly empleadoRepository: Repository<Empleado>,
     @InjectRepository(Usuario) private readonly usuarioRepository: Repository<Usuario>,
     @InjectRepository(Notificacion) private readonly notificacionRepository: Repository<Notificacion>,
+    @InjectRepository(Viaje) private readonly viajeRepository: Repository<Viaje>,
     private readonly whatsappService: WhatsappService,
     private readonly qrService: QRService,
   ) {}
@@ -129,6 +131,50 @@ export class SolicitudesService {
     }
 
     return usuario.empleado.id;
+  }
+
+  async notificacionCoordinador(viajeId: number) {
+    const viaje = await this.viajeRepository.findOne({
+      where: { id: viajeId },
+      relations: {
+        empleado_embarque: true,
+        viajeEmbarques: {
+          embarque: true,
+        },
+      },
+    });
+
+    if (!viaje) {
+      throw new AppException('VAL_RECORD_NOT_FOUND', { record: 'Viaje', id: viajeId });
+    }
+
+    if (!viaje.empleado_embarque) {
+      throw new AppException('VAL_RECORD_NOT_FOUND', { record: 'empleado_embarque', id: viajeId });
+    }
+
+    const usuarioEmbarque = await this.usuarioRepository.findOne({
+      where: { empleado: { id: viaje.empleado_embarque.id } },
+      relations: { empleado: true, rol: true },
+    });
+
+    if (!usuarioEmbarque) {
+      throw new AppException('VAL_RECORD_NOT_FOUND', { record: 'Usuario', id: viaje.empleado_embarque.id });
+    }
+
+    const viajeEmbarque = viaje.viajeEmbarques?.[0];
+
+    if (!viajeEmbarque) {
+      throw new AppException('VAL_RECORD_NOT_FOUND', { record: 'ViajeEmbarque' });
+    }
+
+    return this.create(
+      {
+        viaje_embarque_id: viajeEmbarque.id,
+        tipo: Tipo.SOLICITARQR,
+        motivo: `Notificación coordinador para el viaje #${viajeId}`,
+      },
+      String(usuarioEmbarque.id),
+    );
   }
 
   async aceptar(id: number) {
