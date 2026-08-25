@@ -28,7 +28,7 @@ export class ViajesService {
     private readonly transporteRepo: Repository<Transporte>,
     @InjectRepository(Empleado)
     private readonly empleadoRepo: Repository<Empleado>,
-    @InjectRepository(Empleado)
+    @InjectRepository(Embarque)
     private readonly embarqueRepo: Repository<Embarque>,
     @InjectRepository(ViajeEmbarque)
     private readonly viajeEmbarqueRepo: Repository<ViajeEmbarque>,

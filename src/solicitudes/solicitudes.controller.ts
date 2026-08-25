@@ -17,8 +17,8 @@ export class SolicitudesController {
   @Post()
   @UseGuards(SessionGuard)
   @HttpCode(201)
-  async create(@Body() createSolicitudeDto: CreateSolicitudeDto) {
-    return this.solicitudesService.create(createSolicitudeDto);
+  async create(@Body() createSolicitudeDto: CreateSolicitudeDto, @CurrentUser() user: { id: string }) {
+    return this.solicitudesService.create(createSolicitudeDto, user.id);
   }
 
   @Get() 
