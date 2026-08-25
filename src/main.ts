@@ -10,7 +10,7 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.use(cookieParser());
   app.enableCors({
-  origin: [process.env.FRONT_LOGIN_URL, process.env.FRONT_NEGOCIO_URL],
+  origin: ["https://sso.traces.lat","https://traces.lat"],
   credentials: true,
 })
   app.useGlobalPipes(
