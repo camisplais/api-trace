@@ -237,7 +237,7 @@ export class EmpleadosService {
             fecha_ingreso: new Date(row.fecha_ingreso),
             departamento: departamento!,
             puesto: row.puesto,
-            estado: estado ?? undefined,
+            estado: estado ?? Estado.DISPONIBLE,
           }
         : null;
 
