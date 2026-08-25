@@ -1,16 +1,20 @@
-import { UseGuards,Controller, Get, Post, Patch,Query, Body,Req, Res,NotFoundException } from '@nestjs/common';
+import { UseGuards,Controller, Get, Post, Patch,Headers,Query, Body,Req, Res,NotFoundException } from '@nestjs/common';
 import type { Request, Response } from 'express';
 import { ConfigService } from '@nestjs/config';
 import { AuthService } from './auth.service';
 import { SessionGuard } from '../auth/session.guard';
 import { TokenAuthGuard } from './token.guard';
 import { CurrentUser } from '../auth/current-user.decorator';
+import { WhatsappService } from 'src/common/whatsapp/whatsapp.service';
+import { UnauthorizedException } from '@nestjs/common';
+
 
 @Controller('auth')
 export class AuthController {
   constructor(
     private readonly authService: AuthService,
     private readonly config: ConfigService,
+    private readonly whatsappService: WhatsappService
     
   ) {}
 
@@ -63,8 +67,12 @@ export class AuthController {
       res.clearCookie('oauth_state');
 
       // Poner la cookie de sesion (la llave del casillero)
+      const isProd = process.env.NODE_ENV === 'production';
+
       res.cookie('sid', sessionId, {
-        httpOnly: true, secure: false, sameSite: 'lax',
+        httpOnly: true,
+        secure: isProd,
+        sameSite: isProd ? 'none' : 'lax',
         maxAge: 1000 * 60 * 60 * 24 * 7, // 7 dias
       });
 
@@ -104,6 +112,18 @@ export class AuthController {
     @Body() body: { password: string },
   ) {
     return this.authService.updateUserPassword(user.id, body.password);
+  }
+
+   @Post('enviar/otp')
+  async enviarOtpWhatsapp(@Body() body: { codigo: string },
+  ) {
+
+    const numeroFijo = '8717888054' as string;
+    const mensaje = `Tu código de verificación Trace es: ${body.codigo}. Expira en 5 minutos.`;
+
+    await this.whatsappService.enviarMensaje(numeroFijo, mensaje);
+
+    return { ok: true };
   }
   
   @Post('logout')
