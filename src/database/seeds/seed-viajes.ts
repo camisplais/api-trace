@@ -8,11 +8,11 @@ export async function seedViajes(dataSource: DataSource) {
   const empleadoRepo = dataSource.getRepository(Empleado);
   const transporteRepo = dataSource.getRepository(Transporte);
 
-  // Obtener chóferes filtrando por puesto
-  const todosEmpleados = await empleadoRepo.find();
-  const choferes = todosEmpleados.filter((e) =>
-    e.puesto.toLowerCase().includes('chofer'),
-  );
+  // Obtener únicamente chóferes con IDs 5 y 11
+  const choferes = await empleadoRepo.find({
+    where: { id: In([5, 11]) },
+    order: { id: 'ASC' },
+  });
 
   // Obtener únicamente empleados de embarque con IDs 3, 6 y 7
   const empleadosEmbarque = await empleadoRepo.find({
@@ -22,7 +22,7 @@ export async function seedViajes(dataSource: DataSource) {
 
   // Obtener únicamente transportes con IDs 1, 3, 5, 7 y 9
   const transportes = await transporteRepo.find({
-    where: { id: In([2, 4, 6, 8, 10]) },
+    where: { id: In([2, 4, 6, 8]) },
     order: { id: 'ASC' },
   });
 
@@ -32,7 +32,7 @@ export async function seedViajes(dataSource: DataSource) {
     transportes.length === 0
   ) {
     console.warn(
-      'Faltan chóferes, empleados de embarque (IDs 3, 6, 7) o transportes (IDs 1, 3, 5, 7, 9). Corre esos seeds primero.',
+      'Faltan chóferes (IDs 5, 11), empleados de embarque (IDs 3, 6, 7) o transportes (IDs 1, 3, 5, 7, 9). Corre esos seeds primero.',
     );
     return;
   }

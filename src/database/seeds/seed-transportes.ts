@@ -63,7 +63,7 @@ export async function seedTransportes(dataSource: DataSource) {
       placas: 'EFG-9900',
       marca: 'DAF',
       carga_util: '18500.00',
-      estado: Estado.VIAJE,
+      estado: Estado.PLANTA,
     },
   ];
 
