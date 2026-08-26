@@ -2,7 +2,7 @@ import { Injectable, NotFoundException, BadRequestException } from '@nestjs/comm
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { v4 as uuidv4 } from 'uuid';
-import { Empleado } from 'src/empleados/entities/empleado.entity';
+import { Empleado, Estado as EstadoEmpleado } from 'src/empleados/entities/empleado.entity';
 import { Viaje } from 'src/viajes/entities/viaje.entity';
 import { Usuario } from 'src/usuarios/entities/usuario.entity';
 import { SeguimientoViaje } from 'src/seguimiento_viaje/entities/seguimiento_viaje.entity';
@@ -120,7 +120,9 @@ export class QRService {
 
     const seguimiento = await this.seguimientoRepo.findOne({
       where: { qr },
-      relations: { viaje: { transporte: true , viajeEmbarques: true,} },   
+      relations: {
+        viaje: { transporte: true, empleado_chofer: true, viajeEmbarques: true },
+      },
     });
 
     if (!seguimiento) {
@@ -146,6 +148,9 @@ export class QRService {
 
       seguimiento.viaje.transporte.estado = Estado.PLANTA;
       await this.transporteRepo.save(seguimiento.viaje.transporte);
+
+      seguimiento.viaje.empleado_chofer.estado = EstadoEmpleado.DISPONIBLE;
+      await this.empleadoRepo.save(seguimiento.viaje.empleado_chofer);
 
       return {
         evento: 'entrada',
