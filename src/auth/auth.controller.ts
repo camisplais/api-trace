@@ -130,11 +130,11 @@ export class AuthController {
   @Post('logout')
   async logout(@Req() req: Request, @Res() res: Response) {
     const sessionId = req.cookies?.sid;
-    if (sessionId) {
-      await this.authService.borrarSesion(sessionId);
-    }
+    const deleted = sessionId
+      ? await this.authService.borrarSesion(sessionId)
+      : false;
+
     res.clearCookie('sid', { path: '/' });
-    res.clearCookie('sid', { path: '/auth' });
-    return res.json({ ok: true });
+    return res.json({ ok: true, sessionDeleted: deleted });
   }
 }

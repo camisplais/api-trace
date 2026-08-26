@@ -114,8 +114,9 @@ export class AuthService {
   }
 
   // --- Borra una sesion (logout) ---
-  async borrarSesion(sessionId: string): Promise<void> {
-    await this.sesionRepo.delete({ id: sessionId });
+  async borrarSesion(sessionId: string): Promise<boolean> {
+    const resultado = await this.sesionRepo.delete({ id: sessionId });
+    return (resultado.affected ?? 0) > 0;
   }
 
   // --- Helper: saca el 'sub' del id_token (sin verificar firma, solo leer) ---
