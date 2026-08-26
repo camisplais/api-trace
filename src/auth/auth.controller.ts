@@ -73,6 +73,7 @@ export class AuthController {
         httpOnly: true,
         secure: isProd,
         sameSite: isProd ? 'none' : 'lax',
+        path: '/',
         maxAge: 1000 * 60 * 60 * 24 * 7, // 7 dias
       });
 
@@ -132,7 +133,8 @@ export class AuthController {
     if (sessionId) {
       await this.authService.borrarSesion(sessionId);
     }
-    res.clearCookie('sid');
+    res.clearCookie('sid', { path: '/' });
+    res.clearCookie('sid', { path: '/auth' });
     return res.json({ ok: true });
   }
 }
