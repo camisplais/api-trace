@@ -14,6 +14,7 @@ import { AppException } from 'src/common/errors/app.exception';
 import { Embarque } from 'src/embarques/entities/embarque.entity';
 import { FindViajesDto } from './dto/find-viajes.dto';
 import { SeguimientoViaje } from 'src/seguimiento_viaje/entities/seguimiento_viaje.entity';
+import { Usuario } from 'src/usuarios/entities/usuario.entity';
 
 @Injectable()
 export class ViajesService {
@@ -28,6 +29,8 @@ export class ViajesService {
     private readonly transporteRepo: Repository<Transporte>,
     @InjectRepository(Empleado)
     private readonly empleadoRepo: Repository<Empleado>,
+    @InjectRepository(Usuario)
+    private readonly usuarioRepo: Repository<Usuario>,
     @InjectRepository(Embarque)
     private readonly embarqueRepo: Repository<Embarque>,
     @InjectRepository(ViajeEmbarque)
@@ -39,7 +42,18 @@ export class ViajesService {
   
     async crearViaje(dto: CrearViajeDto, userId:number | string)
     {
-      const empleadoEmbarqueId = Number(userId);
+      const usuario = await this.usuarioRepo.findOne({
+        where: { id: Number(userId) },
+        relations: { empleado: true },
+      });
+      if (!usuario) {
+        throw new AppException('VAL_RECORD_NOT_FOUND', { record: 'Usuario' });
+      }
+      if (!usuario.empleado) {
+        throw new AppException('VAL_RECORD_NOT_FOUND', { record: 'Empleado' });
+      }
+
+      const empleadoEmbarqueId = usuario.empleado.id;
       // 1. Validar transporte existe y está disponible
       const transporte = await this.transporteRepo.findOne({
         where: { id: dto.transporte_id },
