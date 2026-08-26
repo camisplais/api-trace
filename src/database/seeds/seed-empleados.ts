@@ -58,7 +58,7 @@ export async function seedEmpleados(dataSource: DataSource) {
       fecha_ingreso: new Date('2017-02-14'),
       departamento: Departamento.TRANSPORTES,
       puesto: 'Chofer',
-      estado: Estado.DISPONIBLE,
+      estado: Estado.OCUPADO,
     },
     {
       no_empleado: 1006,
@@ -124,7 +124,7 @@ export async function seedEmpleados(dataSource: DataSource) {
       fecha_ingreso: new Date('2014-11-07'),
       departamento: Departamento.TRANSPORTES,
       puesto: 'Chofer',
-      estado: Estado.DISPONIBLE,
+      estado: Estado.OCUPADO,
     },
     {
       no_empleado: 1012,
